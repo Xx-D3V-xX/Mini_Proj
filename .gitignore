@@ -33,3 +33,4 @@ Thumbs.db
 !/ai-models/app/data/cache/.gitkeep
 venv/
 venv/*
+ai-models/venv/
