@@ -1,0 +1,94 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Role {
+  ADMIN
+  USER
+}
+
+model User {
+  id            String      @id @default(uuid()) @map("id")
+  email         String      @unique
+  password_hash String      @map("password_hash")
+  name          String?
+  role          Role        @default(USER)
+  preferences   Json?
+  embedding     Json?
+  created_at    DateTime    @default(now())
+  updated_at    DateTime    @updatedAt
+  itineraries   Itinerary[]
+  reviews       Review[]
+  feedbacks     Feedback[]
+
+  @@map("users")
+}
+
+model Poi {
+  id            String     @id @default(uuid())
+  name          String
+  description   String
+  category      String
+  latitude      Float
+  longitude     Float
+  rating        Float?
+  price_level   Int?
+  opening_hours Json?
+  image_url     String?
+  tags          String[]
+  created_at    DateTime   @default(now())
+  updated_at    DateTime   @updatedAt
+  reviews       Review[]
+  feedbacks     Feedback[]
+
+  @@map("pois")
+  @@index([latitude, longitude], map: "poi_geo_idx")
+}
+
+model Itinerary {
+  id                String   @id @default(uuid())
+  user_id           String
+  user              User     @relation(fields: [user_id], references: [id])
+  title             String
+  date              DateTime?
+  items             Json
+  total_distance_km Float?
+  total_time_min    Int?
+  created_at        DateTime @default(now())
+  updated_at        DateTime @updatedAt
+
+  @@map("itineraries")
+  @@index([user_id])
+}
+
+model Review {
+  id         String   @id @default(uuid())
+  user_id    String
+  poi_id     String
+  rating     Int
+  comment    String?
+  created_at DateTime @default(now())
+  user       User     @relation(fields: [user_id], references: [id])
+  poi        Poi      @relation(fields: [poi_id], references: [id])
+
+  @@map("reviews")
+  @@index([poi_id])
+}
+
+model Feedback {
+  id         String   @id @default(uuid())
+  user_id    String
+  poi_id     String
+  signal     String
+  created_at DateTime @default(now())
+  user       User     @relation(fields: [user_id], references: [id])
+  poi        Poi      @relation(fields: [poi_id], references: [id])
+
+  @@map("feedbacks")
+  @@index([poi_id])
+}

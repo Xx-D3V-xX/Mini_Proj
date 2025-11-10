@@ -1,0 +1,35 @@
+@base=http://localhost:4000
+###
+# Login
+POST {{base}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "admin@local.test",
+  "password": "Admin123!"
+}
+###
+# List POIs
+GET {{base}}/pois
+###
+# Recommend (mood=Chill)
+POST {{base}}/integrations/recommend
+Content-Type: application/json
+
+{
+  "mood": "Chill",
+  "prefs": {"budget": "medium"}
+}
+###
+# Generate itinerary
+POST {{base}}/itineraries/generate
+Content-Type: application/json
+
+{
+  "mood": "Adventure",
+  "start_location": {"lat":19.0760,"lng":72.8777},
+  "time_window": {"start":"09:30","end":"19:00"}
+}
+###
+# AI Health
+GET http://localhost:8001/health

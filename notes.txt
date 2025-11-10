@@ -1,0 +1,6 @@
+Next Steps
+
+  1. With PostgreSQL running and .env pointing at the right role, rerun npm run migrate and then npm run start to boot the API.
+  2. Exercise POI CRUD + analytics endpoints; JSON payload handling and CSV import paths changed slightly, so a smoke test helps ensure no
+     runtime regressions.
+  3. When satisfied, commit the backend changes alongside the earlier dependency bumps.

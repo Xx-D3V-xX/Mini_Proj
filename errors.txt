@@ -1,0 +1,42 @@
+react-dom_client.js?v=845e483e:2156 In HTML, <a> cannot be a descendant of <a>.
+This will cause a hydration error.
+
+  ...
+    <AppContent>
+      <div className="min-h-scre...">
+        <Navbar>
+        <Switch>
+          <Route path="/" match={[...]}>
+            <Landing isAuthenticated={false} onLogin={function handleOpenAuthModal}>
+              <div className="min-h-screen">
+                <section>
+                <section>
+                <section>
+                <section>
+                <section>
+                <footer className="bg-card bo...">
+                  <div className="container ...">
+                    <div className="grid grid-...">
+                      <div>
+                      <div>
+                        <h4>
+                        <ul className="space-y-2 ...">
+                          <li>
+>                           <a onClick={function} href="/explore" className={undefined} ref={null}>
+>                             <a className="hover:text-foreground transition-colors">
+                          ...
+                      ...
+                    ...
+        ...
+react-dom_client.js?v=845e483e:2163 <a> cannot contain a nested <a>.
+See this log for the ancestor stack trace.
+explore:1 Access to fetch at 'http://localhost:4000/pois?page=1' from origin 'http://localhost:5173' has been blocked by CORS policy: The value of the 'Access-Control-Allow-Credentials' header in the response is '' which must be 'true' when the request's credentials mode is 'include'.
+:4000/pois?page=1:1 
+ Failed to load resource: net::ERR_FAILED
+explore:1 Access to fetch at 'http://localhost:4000/integrations/recommend' from origin 'http://localhost:5173' has been blocked by CORS policy: Response to preflight request doesn't pass access control check: The value of the 'Access-Control-Allow-Credentials' header in the response is '' which must be 'true' when the request's credentials mode is 'include'.
+:4000/integrations/recommend:1 
+ Failed to load resource: net::ERR_FAILED
+explore:1 Access to fetch at 'http://localhost:4000/pois?page=1' from origin 'http://localhost:5173' has been blocked by CORS policy: The value of the 'Access-Control-Allow-Credentials' header in the response is '' which must be 'true' when the request's credentials mode is 'include'.
+:4000/pois?page=1:1 
+ Failed to load resource: net::ERR_FAILED
+﻿

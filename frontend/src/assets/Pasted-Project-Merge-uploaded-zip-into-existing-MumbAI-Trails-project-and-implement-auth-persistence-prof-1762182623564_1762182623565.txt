@@ -1,0 +1,89 @@
+Project: Merge uploaded zip into existing MumbAI Trails project and implement auth persistence, profile history, AI itinerary generator, and image fallbacks. DO NOT overwrite entire project — merge and integrate only. Back up project before changes.
+
+High-level goals:
+1) Keep the new landing page as "/" but do not force redirect to login on every visit.
+2) Maintain existing user pages and routes (ensure /explore or /dashboard works after login).
+3) Persist authentication across reloads.
+4) Add /profile and /itinerary/generate features (protected routes).
+5) Fix missing images in cards with fallback.
+
+Technical details & required changes:
+
+A) Auth persistence & routing
+ - Use the existing auth flow but ensure token is saved in localStorage (or same storage used in project).
+ - Implement or update an AuthContext (React) or equivalent:
+    - On app start, read token from localStorage. If token exists, validate by calling GET /api/profile or /api/auth/validate and set user state.
+    - Expose `login(email, password)` which calls POST /api/auth/login -> {token, user}, store token and user in context and localStorage.
+    - Expose `logout()` to clear token and redirect to "/".
+ - Update ProtectedRoute to check AuthContext state instead of redirecting on first mount (prevent loop).
+ - After successful login, route the user to `/explore` (or existing main page). If user visited "/" while logged in, show landing with CTA “Go to Explore” but don't auto-redirect.
+
+B) Fix forced login loop bug
+ - Inspect the logic currently redirecting "/" -> "/login" and change to:
+    - If route is protected (like /profile or /explore) and user is not authenticated, redirect to /login.
+    - If route is public ("/"), show landing and allow login modal but do not auto-redirect.
+ - Debounce or await async auth-check in app start to avoid redirecting before token validation completes:
+    e.g. show a loading state while validating token.
+
+C) Profile page (/profile) — protected route
+ - Layout: header with name + email + Edit.
+ - Tabs:
+   1. My Itineraries: GET /api/profile/itineraries -> list with view/edit/delete/save-as JSON.
+   2. History / Places Visited: GET /api/profile/history -> placeName, visitDate, bookingId, notes, rating.
+ - Implement UI components: ItineraryList, ItineraryItem, HistoryList.
+ - Mock endpoints if backend missing; ensure UI reads mock JSON file (e.g., /src/mocks/profile.json).
+
+D) AI Itinerary Generator (/itinerary/generate)
+ - Input form: days (number), interests (multiselect), budget (range), travel mode.
+ - Submit: POST /api/itinerary/generate { userId, days, interests, budget }
+ - Expected response shape:
+   {
+     id: "...",
+     title: "2-Day Food & Heritage",
+     days: [
+       { day: 1, pois: [ {name, time, address, imageUrl, notes} ] },
+       ...
+     ],
+     summary: "..."
+   }
+ - Show generated itinerary on success with Save button:
+   - Save posts to POST /api/profile/itineraries (or save to local mock).
+ - If real API unavailable, implement a deterministic mock algorithm in frontend that returns a sample itinerary based on chosen interests.
+
+E) Fix card images & placeholders
+ - For each Trail/POI card, render `<img src={poi.imageUrl || fallbackUrl} onError={(e)=>e.target.src=fallbackUrl} />`
+ - Add fallback image asset to /public/assets/placeholder.png or use `https://source.unsplash.com/featured/?mumbai,food,heritage` as fallback.
+ - Ensure image alt attributes are set for accessibility.
+
+F) Data & API contract (mocks if needed)
+ - GET /api/profile -> { user: {id,name,email,avatarUrl,interests}}
+ - GET /api/profile/itineraries?page=1&limit=10 -> {itineraries:[...], meta:{...}}
+ - GET /api/profile/history?page=1 -> {history:[...]}
+ - POST /api/itinerary/generate -> returns generated itinerary object
+ - POST /api/profile/itineraries -> saves itinerary
+
+G) UX & Acceptance criteria
+ - After login: user lands at /explore. Reloading page keeps user logged in.
+ - Home "/" shows landing and CTA to Login/Register or “Go to Explore” if logged in.
+ - /profile protected and shows user itineraries & history.
+ - /itinerary/generate returns a viable itinerary; user can save it.
+ - Cards display images or fallback placeholders.
+ - Show skeleton loaders for fetches and handle API errors with user-friendly messages.
+
+H) Testing checklist for reviewer
+ - [ ] Login (happy + invalid credentials)
+ - [ ] Token persists after reload and app fetches profile
+ - [ ] Visiting "/" while logged in does not force a login modal repeatedly
+ - [ ] /explore loads and shows cards with images/fallbacks
+ - [ ] /profile shows itineraries and history
+ - [ ] /itinerary/generate returns mock/generated itinerary and can be saved
+
+I) Developer notes
+ - If modifying routing, update `App.jsx` / `index.jsx` only — do not replace the entire router.
+ - Keep styling consistent using existing CSS/Tailwind variables.
+ - If unsure about overwriting a file, create a new file (e.g., AuthContextNew.js) and request review.
+ - Add mock JSON files under `/src/mocks/` and a simple adapter service `/src/services/mockApi.js` so backend can be swapped later.
+
+Deliverable: merged project with working auth persistence, profile/history, AI itinerary generator (mock or real), image fallback handling, and no forced login loops.
+
+If you need, I can also produce the small mock JSON files and the exact AuthContext / ProtectedRoute code snippet to paste into the project—tell me the framework (React, Next.js, Vite) and I’ll give the code.

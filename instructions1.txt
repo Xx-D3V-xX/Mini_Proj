@@ -1,0 +1,673 @@
+# === MASTER BUILD ORDER & HARD RULES =========================================
+# Project: MumbAI Trails (local-only, submission-ready)
+# You are to generate a complete repository with EXACTLY THREE top-level directories:
+#   /ai-models   /backend   /frontend
+# Root files are allowed: README.md, .env.example, EVALUATION.md, ARCHITECTURE.md,
+# API.http, start-all.sh, start-all.ps1, .gitignore, CHANGELOG.md, LICENSE
+# Do NOT create any other top-level folders. No Docker. No cloud services.
+# Everything must run locally and offline by default. Use only mockable externals.
+# After generating all code, also write README.md containing the step-by-step
+# local setup & run guide (Linux/macOS & Windows), EXACT commands, and troubleshooting.
+
+# =============================================================================
+# 0) GLOBAL CONSTRAINTS
+# =============================================================================
+# - Local-only: PostgreSQL on localhost; local file uploads; model cache on disk.
+# - Optional extras (documented but disabled by default):
+#     * Local OSRM server on http://localhost:5000 for routing (fallback is Haversine).
+#     * Local LLM via Ollama for chatbot rephrasing; fallback is rule-based template.
+# - Ports (configurable in env): frontend 5173, backend 4000, ai-models 8001, osrm 5000
+# - Security: email/password, roles ADMIN|USER, JWT (access+refresh), optional httpOnly cookies.
+# - CORS locked to http://localhost:5173 by default.
+# - Naming: DB snake_case; React components PascalCase; vars/functions camelCase.
+# - Quality: No TODOs/placeholders; Zod DTOs; robust error messages; loading states and empty states.
+
+# =============================================================================
+# 1) ROOT FILES (CREATE EXACTLY)
+# =============================================================================
+# - .gitignore  (node, python, env, pycache, dist, .vite, coverage, /backend/uploads/* except .gitkeep)
+# - .env.example (top-level example variables—reference child .env.example files)
+# - README.md     (see section 11; include complete, chronological instructions)
+# - EVALUATION.md (examiner-friendly 10-min demo script + acceptance checklist)
+# - ARCHITECTURE.md (Mermaid diagrams + brief rationale)
+# - API.http      (VS Code HTTP file with requests for quick verification)
+# - start-all.sh  (bash) — start ai-models → backend → frontend (with health checks)
+# - start-all.ps1 (PowerShell) — same flow
+# - CHANGELOG.md  (init v1.0.0)
+# - LICENSE       (MIT)
+
+# =============================================================================
+# 2) TOP-LEVEL DIRECTORY STRUCTURE (EXACT)
+# =============================================================================
+# Only these three folders:
+#   /ai-models
+#   /backend
+#   /frontend
+
+# =============================================================================
+# 3) /ai-models  (Python 3.11 + FastAPI)
+# =============================================================================
+# Purpose: embeddings, recommendation scoring, itinerary generation, travel-time,
+#          mock weather, and a lightweight retrieval-based chatbot.
+# Structure:
+# /ai-models
+#   /app
+#     __init__.py
+#     main.py
+#     deps.py           # load env, create caches, model lazy loaders
+#     schemas.py        # Pydantic models for all endpoints
+#     config.py         # env handling with defaults (PORT=8001, paths, model ids)
+#     /services
+#       embeddings.py   # use sentence-transformers (all-MiniLM-L6-v2); fallback TF-IDF
+#       recommend.py    # multi-objective scoring with configurable weights
+#       itinerary.py    # greedy + 2-opt improvement; respects opening_hours
+#       travel_time.py  # OSRM if available → else Haversine + speed profiles
+#       chatbot.py      # retrieval (BM25/TF-IDF) + optional Ollama wrapper
+#       weather.py      # mock provider (static JSON) + switchable live stub
+#       utils.py        # haversine, clustering helpers, normalizers
+#     /data
+#       stopwords.txt
+#       cache/          # model & index cache (create dir)
+#   requirements.txt
+#   pyproject.toml      # optional; keep minimal if using pip
+#   .env.example
+#
+# Pin conservative working versions:
+#   fastapi==0.115.5
+#   uvicorn==0.30.6
+#   pydantic==2.9.2
+#   numpy==2.1.3
+#   pandas==2.2.3
+#   scikit-learn==1.5.2
+#   sentence-transformers==3.1.1
+#   nltk==3.9.1
+#   python-dotenv==1.0.1
+#   requests==2.32.3
+#
+# .env.example content:
+#   PORT=8001
+#   EMBED_MODEL=sentence-transformers/all-MiniLM-L6-v2
+#   EMBED_CACHE_DIR=./app/data/cache
+#   RECO_WEIGHTS=0.45,0.2,0.2,0.05,0.1  # sim, category, distance, price, rating
+#   OSRM_URL=http://localhost:5000
+#   OLLAMA_MODEL=        # e.g., llama3 (leave empty to disable)
+#
+# Implement endpoints:
+#   GET  /health
+#   POST /embed           {texts:[str]} → {vectors:[[float]]}
+#   POST /recommend       {mood, prefs, location?, filters?} → ranked pois + reasons
+#   POST /itinerary       {mood, start_location, time_window, poi_ids?} → ordered plan
+#   POST /travel-time     {coords:[{lat,lng}]} → pairwise or path ETA mins
+#   POST /chat            {query} → textual answer using local corpus; optional LLM rephrase
+#
+# Critical behaviors:
+# - Cache sentence-transformers model under EMBED_CACHE_DIR; if download fails, fallback to TF-IDF.
+# - Weather: serve from local static JSON (clear/cloudy/rain) with plausible temps; include day/night variance.
+# - Itinerary: cluster nearby POIs, ensure category diversity, insert lunch/evening breaks, compute walking/public speeds.
+# - Travel time fallback: Haversine; time-of-day speed profile (morning=slow, midday=faster, evening=slow).
+# - Chatbot: build BM25/TF-IDF over POI descriptions + tags + reviews loaded from backend export endpoint.
+
+# =============================================================================
+# 4) /backend  (Node 22 + NestJS + Prisma + Zod)
+# =============================================================================
+# Structure:
+# /backend
+#   /prisma
+#     schema.prisma
+#     migrations/            # generated by prisma migrate
+#   /src
+#     main.ts
+#     app.module.ts
+#     /common
+#       config.ts            # env loader, CORS, cookies toggle
+#       exceptions.ts        # global filters
+#       validation/          # zod schemas + pipes
+#       guards/              # roles, jwt
+#       interceptors/        # logging, transform
+#     /auth
+#       auth.module.ts
+#       auth.controller.ts
+#       auth.service.ts
+#       strategies/
+#       dto/
+#     /users
+#       users.module.ts
+#       users.controller.ts
+#       users.service.ts
+#       dto/
+#     /pois
+#       pois.module.ts
+#       pois.controller.ts
+#       pois.service.ts
+#       dto/
+#     /itineraries
+#       itineraries.module.ts
+#       itineraries.controller.ts
+#       itineraries.service.ts
+#       dto/
+#     /uploads
+#       uploads.module.ts
+#       uploads.controller.ts
+#       uploads.service.ts
+#     /analytics
+#       analytics.module.ts
+#       analytics.controller.ts
+#       analytics.service.ts
+#     /integrations
+#       ai-client.service.ts
+#       weather-client.service.ts
+#     /jobs
+#       seed.service.ts
+#   /uploads                 # local file storage
+#   /seed
+#     pois.csv               # ship 60–80 realistic Mumbai POIs
+#     generate_dummy_pois.ts # synthesize more rows
+#   package.json
+#   tsconfig.json
+#   .env.example
+#
+# Backend versions:
+#   "typescript": "^5.6.3"
+#   "nestjs": "^10.x"
+#   "prisma": "^5.20.0"
+#   "zod": "^3.23.8"
+#   "class-transformer": "^0.5.1"
+#   "class-validator": "^0.14.0"
+#   "bcrypt": "^5.1.1"
+#   "jsonwebtoken": "^9.0.2"
+#   "cookie-parser": "^1.4.7"
+#   "multer": "^1.4.5-lts.1"
+#   "csv-parse": "^5.5.6"
+#   "swagger-ui-express": "^5.0.1"
+#   "@nestjs/swagger": "^7.4.2"
+#
+# .env.example content:
+#   DATABASE_URL=postgresql://postgres:postgres@localhost:5432/mumbai_trails
+#   PORT=4000
+#   JWT_ACCESS_SECRET=change_this_access
+#   JWT_REFRESH_SECRET=change_this_refresh
+#   ACCESS_EXPIRES_MIN=15
+#   REFRESH_EXPIRES_DAYS=7
+#   CORS_ORIGIN=http://localhost:5173
+#   AI_BASE_URL=http://localhost:8001
+#   USE_AUTH_COOKIES=true
+#   WEATHER_MODE=mock       # mock | live
+#   WEATHER_API_KEY=
+#
+# Prisma schema (implement accordingly; map to snake_case with @map/@@map):
+#   model User {
+#     id            String   @id @default(uuid()) @map("id")
+#     email         String   @unique
+#     password_hash String
+#     name          String?
+#     role          Role     @default(USER)
+#     preferences   Json?
+#     embedding     Json?
+#     created_at    DateTime @default(now())
+#     updated_at    DateTime @updatedAt
+#     itineraries   Itinerary[]
+#     reviews       Review[]
+#     feedbacks     Feedback[]
+#     @@map("users")
+#   }
+#   enum Role { ADMIN USER }
+#
+#   model Poi {
+#     id            String   @id @default(uuid())
+#     name          String
+#     description   String
+#     category      String
+#     latitude      Float
+#     longitude     Float
+#     rating        Float?
+#     price_level   Int?
+#     opening_hours Json?
+#     image_url     String?
+#     tags          String[]
+#     created_at    DateTime @default(now())
+#     updated_at    DateTime @updatedAt
+#     reviews       Review[]
+#     feedbacks     Feedback[]
+#     @@map("pois")
+#     @@index([latitude, longitude], map: "poi_geo_idx")
+#   }
+#
+#   model Itinerary {
+#     id               String   @id @default(uuid())
+#     user_id          String
+#     user             User     @relation(fields: [user_id], references: [id])
+#     title            String
+#     date             DateTime?
+#     items            Json     // ordered stops with times/distances
+#     total_distance_km Float?
+#     total_time_min    Int?
+#     created_at       DateTime @default(now())
+#     updated_at       DateTime @updatedAt
+#     @@map("itineraries")
+#     @@index([user_id])
+#   }
+#
+#   model Review {
+#     id         String   @id @default(uuid())
+#     user_id    String
+#     poi_id     String
+#     rating     Int
+#     comment    String?
+#     created_at DateTime @default(now())
+#     user       User     @relation(fields: [user_id], references: [id])
+#     poi        Poi      @relation(fields: [poi_id], references: [id])
+#     @@map("reviews")
+#     @@index([poi_id])
+#   }
+#
+#   model Feedback {
+#     id         String   @id @default(uuid())
+#     user_id    String
+#     poi_id     String
+#     signal     String   // "UP" | "DOWN"
+#     created_at DateTime @default(now())
+#     user       User     @relation(fields: [user_id], references: [id])
+#     poi        Poi      @relation(fields: [poi_id], references: [id])
+#     @@map("feedbacks")
+#     @@index([poi_id])
+#   }
+#
+# Expose REST endpoints:
+#   Auth: POST /auth/signup, /auth/login, /auth/refresh, /auth/logout
+#   Users: GET /users/me
+#   POIs:  GET /pois (filters: search, category, tags[], rating_min, price_level, bbox, sort, page)
+#          GET /pois/:id
+#          POST /pois (admin), PUT /pois/:id (admin), DELETE /pois/:id (admin)
+#          POST /pois/import/csv  (multipart upload or body {path})
+#   Itineraries:
+#          POST /itineraries/generate → call AI /itinerary, persist result
+#          GET /itineraries/:id
+#          GET /itineraries          (mine)
+#   Integrations:
+#          POST /integrations/recommend → AI /recommend
+#          POST /integrations/chat      → AI /chat
+#          POST /integrations/travel-time → AI /travel-time
+#          GET  /integrations/weather   → mock by default
+#   Uploads: POST /uploads/image  (save into /backend/uploads)
+#   Docs: Swagger at /docs
+#
+# Implement Zod validation, guards for roles, httpOnly cookie toggle, CORS.
+# Seed:
+#   - admin: admin@local.test / Admin123!
+#   - user:  user@local.test  / User123!
+#   - Load /backend/seed/pois.csv on seed run; include generator script.
+
+# =============================================================================
+# 5) /frontend  (React 18 + Vite + TS + Tailwind + shadcn/ui + TanStack Query + Leaflet)
+# =============================================================================
+# Structure:
+# /frontend
+#   /src
+#     main.tsx
+#     app.tsx
+#     /lib
+#       api.ts            # axios/fetch wrapper; baseURL from env
+#       queryClient.ts
+#       auth.ts
+#       types.ts
+#       utils.ts
+#       config.ts
+#       pdf.ts            # jsPDF + html2canvas export
+#       qr.ts             # QRCode generation
+#     /components
+#       ui/               # shadcn generated components
+#       Navbar.tsx
+#       Footer.tsx
+#       Map.tsx           # Leaflet map with markers and polyline
+#       PoiCard.tsx
+#       MoodPicker.tsx
+#       Filters.tsx
+#       DayPlanner.tsx    # drag & drop timeline
+#       AuthGate.tsx
+#       Chatbot.tsx
+#       AnalyticsCards.tsx
+#     /pages
+#       Landing.tsx       # mood-only suggestions on first load
+#       Explore.tsx       # list + filters + map toggle
+#       Planner.tsx       # itinerary generation + DnD reordering + save
+#       ItineraryView.tsx # read-only share view; QR + PDF buttons
+#       Admin.tsx         # POI CMS (CRUD + CSV import) + analytics
+#       Login.tsx
+#       Signup.tsx
+#       Onboarding.tsx    # preferences survey saved to user.preferences
+#       NotFound.tsx
+#     /routes
+#       router.tsx
+#     /styles
+#       index.css
+#   index.html
+#   package.json
+#   tsconfig.json
+#   vite.config.ts
+#   tailwind.config.js
+#   postcss.config.js
+#   .env.example
+#
+# Frontend .env.example:
+#   VITE_API_BASE=http://localhost:4000
+#   VITE_MAP_TILE_URL=
+#
+# Key behaviors:
+# - Landing: mood chips → call /integrations/recommend; render cards + map preview.
+# - Explore: filter panel, list+map, center map on selection, “Add to Plan”.
+# - Planner: show selected POIs; “Generate Itinerary” → /itineraries/generate; DnD; Save; PDF; QR.
+# - ItineraryView: map polyline, total time/distance, Google Maps redirect for single-destination.
+# - Admin: login-required; table crud; CSV import form; analytics (counts by category, avg rating).
+# - Chatbot: inline; suggests relevant POIs first; allows clarifying questions.
+# - Auth: forms (zod); tokens stored via httpOnly cookies if enabled, else memory.
+
+# =============================================================================
+# 6) PACKAGE SCRIPTS (DEFINE EXACTLY)
+# =============================================================================
+# /backend/package.json scripts:
+#   "dev": "nest start --watch",
+#   "start": "nest start",
+#   "gen": "prisma generate",
+#   "migrate": "prisma migrate dev --name init",
+#   "seed": "ts-node src/jobs/seed.service.ts",
+#   "lint": "eslint ."
+#
+# /frontend/package.json scripts:
+#   "dev": "vite",
+#   "build": "vite build",
+#   "preview": "vite preview"
+#
+# /ai-models (use pip by default; include poetry config but optional):
+#   Dev run command: "uvicorn app.main:app --reload --port 8001"
+#   Start command:   "uvicorn app.main:app --port 8001"
+
+# =============================================================================
+# 7) SEED CSV (backend/seed/pois.csv)
+# =============================================================================
+# Columns (header row must exist):
+#   id,name,description,category,latitude,longitude,rating,price_level,tags,image_url,opening_hours
+# Notes:
+# - Include 60–80 rows covering Mumbai (Colaba, Bandra, Juhu, Powai, Fort, Worli, Marine Drive, Sanjay Gandhi NP, Elephanta Caves, etc.).
+# - opening_hours JSON per day: {"mon":[["09:00","18:00"]], "tue":[...], ..., "sun":[...]}
+# - tags as | separated list in CSV; convert to string[] in importer.
+# Provide generate_dummy_pois.ts to synthesize more rows.
+
+# =============================================================================
+# 8) ACCEPTANCE & HEALTH CHECKS
+# =============================================================================
+# - Frontend http://localhost:5173 loads Landing; mood recs in <2s from local data.
+# - Explore list+map works; filters update; markers clickable.
+# - Planner generates & shows itinerary with distances & times; PDF export works; QR works.
+# - Single-destination ETA shows; button opens Google Maps with ?destination coords.
+# - Admin CSV import functions; CRUD OK; analytics cards render.
+# - Chatbot answers “family-friendly places near Bandra”.
+# - Swagger at http://localhost:4000/docs; /health on ai-models returns ok.
+# - start-all scripts launch in order with basic health polling.
+
+# =============================================================================
+# 9) API.http (CREATE WITH THESE REQUESTS)
+# =============================================================================
+# @base=http://localhost:4000
+###
+# Login
+POST {{base}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "admin@local.test",
+  "password": "Admin123!"
+}
+###
+# List POIs
+GET {{base}}/pois
+###
+# Recommend (mood=Chill)
+POST {{base}}/integrations/recommend
+Content-Type: application/json
+
+{
+  "mood": "Chill",
+  "prefs": {"budget": "medium"}
+}
+###
+# Generate itinerary
+POST {{base}}/itineraries/generate
+Content-Type: application/json
+
+{
+  "mood": "Adventure",
+  "start_location": {"lat":19.0760,"lng":72.8777},
+  "time_window": {"start":"09:30","end":"19:00"}
+}
+###
+# AI Health
+GET http://localhost:8001/health
+
+# =============================================================================
+# 10) START SCRIPTS (WRITE EXACT CONTENTS)
+# =============================================================================
+# start-all.sh  (bash)
+# -----------------------------------------------------------------------------
+# #!/usr/bin/env bash
+# set -euo pipefail
+# ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# log(){ echo -e "[START] $1"; }
+# health(){ curl -sf "$1" >/dev/null 2>&1; }
+#
+# log "Starting AI Models..."
+# (cd "$ROOT_DIR/ai-models" && python -m uvicorn app.main:app --port 8001 > "$ROOT_DIR/ai-models.out" 2>&1 &) 
+# sleep 2
+# until health "http://localhost:8001/health"; do echo "Waiting for ai-models..."; sleep 1; done
+#
+# log "Starting Backend..."
+# (cd "$ROOT_DIR/backend" && npm run start > "$ROOT_DIR/backend.out" 2>&1 &) 
+# sleep 2
+# until curl -sf http://localhost:4000/docs >/dev/null 2>&1; do echo "Waiting for backend..."; sleep 1; done
+#
+# log "Starting Frontend..."
+# (cd "$ROOT_DIR/frontend" && npm run dev > "$ROOT_DIR/frontend.out" 2>&1 &) 
+# sleep 2
+# log "All services started:
+#   Frontend: http://localhost:5173
+#   Backend : http://localhost:4000 (Swagger at /docs)
+#   AI      : http://localhost:8001"
+# -----------------------------------------------------------------------------
+#
+# start-all.ps1  (PowerShell)
+# -----------------------------------------------------------------------------
+# Param()
+# $ErrorActionPreference = "Stop"
+# Function Test-Health($url){ try { Invoke-WebRequest -Uri $url -UseBasicParsing -TimeoutSec 2 | Out-Null; return $true } catch { return $false } }
+# Write-Host "Starting AI Models..."
+# Start-Process -FilePath "python" -ArgumentList "-m","uvicorn","app.main:app","--port","8001" -WorkingDirectory ".\ai-models" -WindowStyle Minimized
+# Start-Sleep -Seconds 2
+# while(!(Test-Health "http://localhost:8001/health")) { Write-Host "Waiting for ai-models..."; Start-Sleep -Seconds 1 }
+# Write-Host "Starting Backend..."
+# Start-Process -FilePath "npm" -ArgumentList "run","start" -WorkingDirectory ".\backend" -WindowStyle Minimized
+# Start-Sleep -Seconds 2
+# while(!(Test-Health "http://localhost:4000/docs")) { Write-Host "Waiting for backend..."; Start-Sleep -Seconds 1 }
+# Write-Host "Starting Frontend..."
+# Start-Process -FilePath "npm" -ArgumentList "run","dev" -WorkingDirectory ".\frontend" -WindowStyle Minimized
+# Write-Host "All services started:
+#   Frontend: http://localhost:5173
+#   Backend : http://localhost:4000 (Swagger at /docs)
+#   AI      : http://localhost:8001"
+# -----------------------------------------------------------------------------
+
+# =============================================================================
+# 11) README.md (WRITE THIS CONTENT VERBATIM, EDIT ONLY FOR PATHS IF NEEDED)
+# =============================================================================
+# Title: MumbAI Trails — Local-Only Build (Submission-Ready)
+#
+# 1. Overview
+# - Three top-level folders only: /ai-models, /backend, /frontend
+# - Ports: FE 5173, BE 4000, AI 8001 (OSRM optional 5000)
+# - Features: mood-based recs, explore list+map, day planner with itinerary, PDF export, QR share,
+#   single-destination ETA + Google Maps redirect, admin CMS + CSV import + analytics,
+#   chatbot over local corpus, weather (mock), route-time heuristic fallback.
+#
+# 2. Prerequisites
+# - Node.js 22.x and one package manager: npm OR pnpm OR yarn
+# - Python 3.11 with pip (or conda)
+# - PostgreSQL 14+ (local)
+# - (Optional) OSRM local server; (Optional) Ollama local LLM
+#
+# 3. Clone & Install Dependencies
+# Linux/macOS:
+#   git clone <your-repo> mumbai-trails && cd mumbai-trails
+#   cd backend && npm i   # OR: pnpm i   # OR: yarn
+#   cd ../frontend && npm i  # OR: pnpm i  # OR: yarn
+#   cd ../ai-models && python -m pip install -r requirements.txt
+# Windows (PowerShell):
+#   git clone <your-repo> mumbai-trails; cd mumbai-trails
+#   cd backend; npm i; cd ..\frontend; npm i; cd ..\ai-models; python -m pip install -r requirements.txt
+# Conda alternative for ai-models:
+#   conda create -n mumbai-trails python=3.11 -y
+#   conda activate mumbai-trails
+#   pip install -r ai-models/requirements.txt
+#
+# 4. Environment Setup
+#   cp backend/.env.example backend/.env
+#   cp ai-models/.env.example ai-models/.env
+#   cp frontend/.env.example frontend/.env
+#   (Edit values only if necessary; defaults work for localhost.)
+#
+# 5. Database Create & Init
+# Linux (Ubuntu):
+#   sudo apt update && sudo apt install -y postgresql postgresql-contrib
+#   sudo -u postgres psql
+#     CREATE DATABASE mumbai_trails;
+#     -- optional user:
+#     -- CREATE USER mumbai_user WITH PASSWORD 'mumbai_pass';
+#     -- GRANT ALL PRIVILEGES ON DATABASE mumbai_trails TO mumbai_user;
+#     \q
+# Windows:
+#   Use "SQL Shell (psql)" that comes with PostgreSQL and run the same SQL as above.
+# Prisma (from backend/):
+#   cd backend
+#   npm run gen
+#   npm run migrate
+# Seed:
+#   npm run seed
+#
+# 6. Start Services Individually
+# AI Models:
+#   cd ai-models
+#   python -m uvicorn app.main:app --port 8001
+# Backend:
+#   cd backend
+#   npm run start
+# Frontend:
+#   cd frontend
+#   npm run dev
+# Open:
+#   Frontend: http://localhost:5173
+#   Backend Swagger: http://localhost:4000/docs
+#   AI Health: http://localhost:8001/health
+#
+# 7. One-Command Start
+# Linux/macOS:
+#   bash ./start-all.sh
+# Windows (PowerShell):
+#   ./start-all.ps1
+#
+# 8. Default Accounts
+#   admin@local.test / Admin123!
+#   user@local.test  / User123!
+#
+# 9. Using the App
+# - Landing: pick mood → “Get Suggestions” (list + map)
+# - Explore: filter by category/tags/rating/price; add to plan
+# - Planner: “Generate Itinerary” → reorder → Save → PDF/QR
+# - Single destination: shows ETA + “Open in Google Maps”
+# - Admin: login → CSV import (/backend/seed/pois.csv) → CRUD → analytics
+# - Chatbot: ask “family-friendly places near Bandra”
+#
+# 10. Optional (OSRM & Ollama)
+# - OSRM: run locally at http://localhost:5000; set OSRM_URL in ai-models/.env
+# - Ollama: install and pull a model (e.g., llama3); set OLLAMA_MODEL in ai-models/.env
+#
+# 11. Troubleshooting
+# - Port conflicts → change ports in .env files (FE/BE/AI) and restart.
+# - DB connection errors → verify DATABASE_URL; ensure postgres is running (sudo service postgresql status).
+# - Prisma migrate issues → delete backend/prisma/migrations and re-run gen + migrate; ensure DB is empty.
+# - AI model download blocked → ai-models will fallback to TF-IDF automatically.
+# - CORS/auth issues → verify CORS_ORIGIN and USE_AUTH_COOKIES in backend/.env
+#
+# 12. Appendix
+# - API quick test: use API.http in VS Code “REST Client” or run curl samples in EVALUATION.md
+# - Changing ports: update env in all three folders consistently.
+#
+# End README.
+# =============================================================================
+
+# =============================================================================
+# 12) EVALUATION.md (WRITE THIS CONTENT)
+# =============================================================================
+# - 10-minute demo script:
+#   1) Start: bash ./start-all.sh  (Windows: ./start-all.ps1)
+#   2) Open FE 5173 → Landing → select “Chill” → verify results in <2s
+#   3) Explore: search “Marine Drive” → select → map centers; Add to Plan
+#   4) Planner: Generate Itinerary → see ordered stops with times; Save; Export PDF; Show QR
+#   5) ItineraryView: open QR route → verify map polyline and totals
+#   6) Admin: login as admin → Import CSV → add/edit/delete POI → see analytics cards
+#   7) Chatbot: “family-friendly places near Bandra” → shows suggestions + reasons
+#   8) Swagger: http://localhost:4000/docs → try GET /pois and POST /itineraries/generate
+# - Acceptance checklist (tick boxes):
+#   [ ] Landing recs render
+#   [ ] Explore filters + map OK
+#   [ ] Planner generate + PDF + QR OK
+#   [ ] Single-destination ETA + Google Maps link
+#   [ ] Admin CSV import + CRUD + analytics
+#   [ ] Chatbot answers from local corpus
+#   [ ] Swagger reachable
+#   [ ] start-all works
+# - curl smoke tests (after login token):
+#   curl -s http://localhost:4000/pois | head
+#   curl -s http://localhost:8001/health
+
+# =============================================================================
+# 13) ARCHITECTURE.md (WRITE THIS CONTENT)
+# =============================================================================
+# - Mermaid diagrams:
+#   ```mermaid
+#   flowchart LR
+#     FE[Frontend React] <--> BE[NestJS API]
+#     BE <--> DB[(PostgreSQL)]
+#     BE <--> AI[FastAPI Models]
+#     AI -->|optional| OSRM[(Local OSRM)]
+#     AI -->|optional| Ollama[(Local LLM)]
+#   ```
+# - ERD (Mermaid):
+#   ```mermaid
+#   erDiagram
+#     User ||--o{ Itinerary : owns
+#     User ||--o{ Review : writes
+#     User ||--o{ Feedback : sends
+#     Poi  ||--o{ Review : receives
+#     Poi  ||--o{ Feedback : receives
+#   ```
+# - Algorithms: recommendation = weighted(similarity, category fit, distance, price, rating)
+# - Itinerary: greedy nearest-insertion + 2-opt improvement; respect opening_hours
+# - Security: JWT access+refresh; httpOnly cookie mode toggle; role guards
+
+# =============================================================================
+# 14) IMPLEMENTATION NOTES (DO THESE EXACTLY)
+# =============================================================================
+# - Use Leaflet with free OSM tiles; if VITE_MAP_TILE_URL set, use that instead.
+# - For CSV tags: split on "|" into string[].
+# - Image handling: if no image_url, FE shows local placeholder; uploads go to /backend/uploads.
+# - Feedback loop: simple weight tweak on UP/DOWN persisted per-user in DB.
+# - Validation: Every POST/PUT has Zod schema; return readable 400 errors.
+# - Empty states & skeleton loaders across lists and planner.
+# - Accessibility: alt text, focus rings, keyboard nav on planner list.
+
+# =============================================================================
+# 15) FINALIZE
+# =============================================================================
+# - Ensure the repository root has ONLY the three folders plus the listed root files.
+# - Ensure all scripts run without modification after README steps.
+# - Ensure seed data present and usable offline.
+# - Produce clean, readable code with inline comments where decisions are non-obvious.
+
+# === END OF INSTRUCTION FILE =================================================
