@@ -1,0 +1,8 @@
+{ "type":"object",
+  "required":["intent","steps"],
+  "properties":{
+    "intent":{"type":"string","enum":["discover","single_poi","itinerary","admin","chat"]},
+    "steps":{"type":"array","items":{"type":"object","required":["agent","expects"],"properties":{"agent":{"type":"string"},"input":{"type":"object"},"expects":{"type":"string"}}}},
+    "needs_clarification":{"type":"array","items":{"type":"string"}}
+  }
+}

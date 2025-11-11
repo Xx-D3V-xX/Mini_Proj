@@ -1,0 +1,81 @@
+id,name,slug,description,latitude,longitude,rating,price_level,image_url,created_at,updated_at
+49c7bb58-1f6a-42eb-857b-141e9bd191f3,Gateway of India,gateway-of-india,Iconic arch-monument facing the Arabian Sea.,18.922,72.8347,4.8,0,,2025-11-11T04:56:06Z,2025-11-11T04:56:06Z
+4d98751d-06fc-4591-880a-63c9f82d8f17,Marine Drive,marine-drive,Promenade with sweeping bay views; perfect for sunsets.,18.9433,72.8238,4.5,0,,2025-11-11T04:56:06Z,2025-11-11T04:56:06Z
+0d078115-9d73-4f9b-afba-10065b596beb,Chhatrapati Shivaji Maharaj Vastu Sangrahalaya,chhatrapati-shivaji-maharaj-vastu-sangrahalaya,Premier museum showcasing art & history.,18.926,72.8327,4.8,1,,2025-11-11T04:56:06Z,2025-11-11T04:56:06Z
+4ea3dc45-28b6-443d-ba24-afd95508e696,Elephanta Caves,elephanta-caves,UNESCO-listed cave temples on Elephanta Island.,18.9643,72.9316,4.2,0,,2025-11-11T04:56:06Z,2025-11-11T04:56:06Z
+91c12bd3-1796-4686-992d-d20985f64bfd,Siddhivinayak Temple,siddhivinayak-temple,Famous temple devoted to Lord Ganesha.,19.0176,72.8305,4.5,0,,2025-11-11T04:56:06Z,2025-11-11T04:56:06Z
+cd92e185-4937-42ca-b16a-8881928a86c3,Haji Ali Dargah,haji-ali-dargah,Mosque and tomb on a small islet accessible via causeway.,18.9823,72.8087,4.8,1,,2025-11-11T04:56:06Z,2025-11-11T04:56:06Z
+e19ecee3-8793-4db1-82aa-273ad8ccfec2,Bandra-Worli Sea Link Viewpoint,bandra-worli-sea-link-viewpoint,Bridge views and photo spot.,19.0169,72.8179,4.3,1,,2025-11-11T04:56:06Z,2025-11-11T04:56:06Z
+26bb0951-0964-4d78-8865-370721bb190f,Juhu Beach,juhu-beach,Popular sandy beach with street food.,19.0988,72.8267,4.5,0,,2025-11-11T04:56:06Z,2025-11-11T04:56:06Z
+8eed6fa4-8611-4188-966c-d4c80c851755,Carter Road Promenade,carter-road-promenade,Seaside walkway with cafés and buzzing evenings.,19.0663,72.8278,4.6,0,,2025-11-11T04:56:06Z,2025-11-11T04:56:06Z
+fb6e619a-1b69-4f05-b8bc-52a83a5e0eea,Linking Road Market,linking-road-market,Bustling street market for fashion & bargains.,19.0725,72.836,4.3,2,,2025-11-11T04:56:06Z,2025-11-11T04:56:06Z
+5b890ec1-d4e6-48d8-bd5d-780434065845,Global Vipassana Pagoda View,global-vipassana-pagoda-view,Golden pagoda visible from Gorai; meditation center.,19.2326,72.7926,4.1,0,,2025-11-11T04:56:06Z,2025-11-11T04:56:06Z
+ace353cf-6b8c-4c83-bbe6-04e82d6e0170,Sanjay Gandhi National Park,sanjay-gandhi-national-park,Vast urban park with trails and Kanheri Caves.,19.2147,72.9106,4.8,0,,2025-11-11T04:56:06Z,2025-11-11T04:56:06Z
+fd123ec6-b897-48ea-8292-a21d89c7ef0d,Powai Lake,powai-lake,Scenic lake with walking paths and birdlife.,19.1167,72.9042,4.7,0,,2025-11-11T04:56:06Z,2025-11-11T04:56:06Z
+c2feca89-49e4-4a60-8bc1-554ef67e3d86,Hanging Garden (Pherozeshah Mehta Garden),hanging-garden-pherozeshah-mehta-garden,Terraced gardens on Malabar Hill.,18.9565,72.8057,4.4,0,,2025-11-11T04:56:06Z,2025-11-11T04:56:06Z
+8f17287c-b9ee-4e72-9df6-6796e69e00e6,Mani Bhavan Gandhi Museum,mani-bhavan-gandhi-museum,Gandhi's Mumbai HQ; exhibits & library.,18.9622,72.8052,4.5,2,,2025-11-11T04:56:06Z,2025-11-11T04:56:06Z
+a6fe7384-62c2-489c-ad08-616d4340d1d9,Colaba Causeway,colaba-causeway,Lively street market with boutiques and cafés.,18.9159,72.8243,4.4,2,,2025-11-11T04:56:06Z,2025-11-11T04:56:06Z
+ba9aecd2-1cb3-46e5-8899-212bf84ce7d7,Taraporewala Aquarium,taraporewala-aquarium,Marine aquarium with tropical species.,18.9525,72.8172,4.5,1,,2025-11-11T04:56:06Z,2025-11-11T04:56:06Z
+98e52980-6dc3-4c8e-845f-06f61e5db5b7,Phoenix Palladium,phoenix-palladium,High-end shopping mall & dining.,19.0033,72.8259,4.5,3,,2025-11-11T04:56:06Z,2025-11-11T04:56:06Z
+0fd1179f-6c94-4b5a-83b9-8d91b212e006,R City Mall,r-city-mall,Large mall with multiplex and eateries.,19.0974,72.9166,4.4,1,,2025-11-11T04:56:06Z,2025-11-11T04:56:06Z
+4972c6c9-6866-49eb-9ce0-c378f5779e7a,Prithvi Theatre,prithvi-theatre,Iconic theatre with cozy café.,19.1152,72.8277,4.0,0,,2025-11-11T04:56:06Z,2025-11-11T04:56:06Z
+988b3752-f0f2-4d66-8c76-f615f477a187,Asiatic Society Library Steps,asiatic-society-library-steps,Grand steps & neo-classical facade.,18.9322,72.8345,4.3,0,,2025-11-11T04:56:06Z,2025-11-11T04:56:06Z
+6ca024fb-abf9-43b3-a74d-2a2d639efeec,Chor Bazaar,chor-bazaar,Historic flea market for antiques & curios.,18.9636,72.8256,3.8,0,,2025-11-11T04:56:06Z,2025-11-11T04:56:06Z
+a3f80597-f6b1-4bd4-8766-19d0c227a7e2,Worli Sea Face,worli-sea-face,Wave-washed promenade with skyline views.,19.0037,72.817,4.7,0,,2025-11-11T04:56:06Z,2025-11-11T04:56:06Z
+3e6a2e9e-1834-4421-abf1-ea2bb7836ad0,Bandstand Promenade,bandstand-promenade,Seaside promenade & fort ruins.,19.043,72.8238,4.1,1,,2025-11-11T04:56:06Z,2025-11-11T04:56:06Z
+e966ec23-8eff-4524-9e1a-4547e4ec3320,Kanheri Caves,kanheri-caves,Ancient Buddhist caves within SGNP.,19.2138,72.9097,4.3,1,,2025-11-11T04:56:06Z,2025-11-11T04:56:06Z
+4af81f8e-df14-4fb5-8064-afc660b67232,Jehangir Art Gallery,jehangir-art-gallery,Contemporary art exhibitions.,18.9265,72.8322,4.4,1,,2025-11-11T04:56:06Z,2025-11-11T04:56:06Z
+eb2caa4f-8a27-4c4f-a566-2ed016de3a7c,Ballard Estate Heritage Walk,ballard-estate-heritage-walk,Colonial-era business district.,18.9415,72.8407,4.5,1,,2025-11-11T04:56:06Z,2025-11-11T04:56:06Z
+a61ce931-eda3-476a-a6b3-3a9fb7303cce,Crawford Market (Mahatma Jyotiba Phule Mandai),crawford-market-mahatma-jyotiba-phule-mandai,Fresh produce & pet shops in a Victorian hall.,18.9482,72.8338,4.1,1,,2025-11-11T04:56:06Z,2025-11-11T04:56:06Z
+bbd22c63-5c02-4a92-b1ed-89ac47e5465d,Nariman Point,nariman-point,Business district at the southern tip.,18.9259,72.8205,4.7,0,,2025-11-11T04:56:06Z,2025-11-11T04:56:06Z
+a01c225f-149f-45af-9dea-d8806fdfb2ab,Atria Mall,atria-mall,Mall with entertainment options.,18.9912,72.8165,4.0,3,,2025-11-11T04:56:06Z,2025-11-11T04:56:06Z
+20f33aea-6bf8-48d4-9ca7-75d0ab1fe2ca,Colaba Coastal Café,colaba-coastal-caf,Casual seaside café known for chai & bun maska.,18.910883,72.80045,4.2,3,,2025-11-11T04:56:06Z,2025-11-11T04:56:06Z
+12b9fe1f-17e3-4d52-8cd2-12eb72224f12,Colaba Street Food Court,colaba-street-food-court,Open-air stalls serving local snacks and juices.,18.902201,72.809164,3.9,2,,2025-11-11T04:56:06Z,2025-11-11T04:56:06Z
+6c0af0ee-ae4c-47d9-a9ea-e6c34105d4b4,Colaba Artisanal Bakery,colaba-artisanal-bakery,Fresh breads and patisserie with local flavors.,18.911429,72.818234,4.4,1,,2025-11-11T04:56:06Z,2025-11-11T04:56:06Z
+48282cd4-9a48-48f7-90c7-3da400c07e8a,Colaba Sunset Point,colaba-sunset-point,Popular sunset lookout with benches.,18.914544,72.806439,4.5,0,,2025-11-11T04:56:06Z,2025-11-11T04:56:06Z
+ec2e4f30-067e-4b10-ab34-a13e8739ce7d,Colaba Joggers Park,colaba-joggers-park,"Track with greenery, ideal for morning runs.",18.905138,72.805296,4.3,1,,2025-11-11T04:56:06Z,2025-11-11T04:56:06Z
+90cb45f1-75a0-4d36-9cb8-d63ce344eb1d,Fort Coastal Café,fort-coastal-caf,Casual seaside café known for chai & bun maska.,18.926859,72.835661,4.2,2,,2025-11-11T04:56:06Z,2025-11-11T04:56:06Z
+b008e4a9-52b0-433c-8899-02a468edd222,Fort Street Food Court,fort-street-food-court,Open-air stalls serving local snacks and juices.,18.925831,72.829477,4.6,2,,2025-11-11T04:56:06Z,2025-11-11T04:56:06Z
+14c9ffb7-8fe4-4b96-a728-3e7a55d4de21,Fort Artisanal Bakery,fort-artisanal-bakery,Fresh breads and patisserie with local flavors.,18.938298,72.836399,4.4,1,,2025-11-11T04:56:06Z,2025-11-11T04:56:06Z
+ab9e942d-3b86-4486-a620-c5c7e626f79e,Fort Sunset Point,fort-sunset-point,Popular sunset lookout with benches.,18.929709,72.837285,4.0,0,,2025-11-11T04:56:06Z,2025-11-11T04:56:06Z
+b36c04e4-44a4-475e-bf0f-636475cb875e,Fort Joggers Park,fort-joggers-park,"Track with greenery, ideal for morning runs.",18.941489,72.82563,4.1,1,,2025-11-11T04:56:06Z,2025-11-11T04:56:06Z
+9df4547b-465e-45d0-99b2-71f7a77dca01,Marine Drive Coastal Café,marine-drive-coastal-caf,Casual seaside café known for chai & bun maska.,18.952175,72.829744,4.7,2,,2025-11-11T04:56:06Z,2025-11-11T04:56:06Z
+b15fd9da-38fd-4418-99b7-5f54aab24ea9,Marine Drive Street Food Court,marine-drive-street-food-court,Open-air stalls serving local snacks and juices.,18.939805,72.81691,4.7,1,,2025-11-11T04:56:06Z,2025-11-11T04:56:06Z
+62c406d9-6563-4167-a911-ef18d1af3aaa,Marine Drive Artisanal Bakery,marine-drive-artisanal-bakery,Fresh breads and patisserie with local flavors.,18.952144,72.820532,4.1,2,,2025-11-11T04:56:06Z,2025-11-11T04:56:06Z
+f712b94d-06eb-4d51-bee3-a4a94d80e6d5,Marine Drive Sunset Point,marine-drive-sunset-point,Popular sunset lookout with benches.,18.934855,72.815734,4.1,0,,2025-11-11T04:56:06Z,2025-11-11T04:56:06Z
+01381327-562f-401f-ad99-9c640a70eba4,Marine Drive Joggers Park,marine-drive-joggers-park,"Track with greenery, ideal for morning runs.",18.94995,72.825875,4.4,0,,2025-11-11T04:56:06Z,2025-11-11T04:56:06Z
+41aa588b-2510-479b-b2fd-c527d2d49add,Bandra Coastal Café,bandra-coastal-caf,Casual seaside café known for chai & bun maska.,19.069214,72.846892,4.7,2,,2025-11-11T04:56:06Z,2025-11-11T04:56:06Z
+fb671e7f-fccc-476f-8e2a-55710d838fb0,Bandra Street Food Court,bandra-street-food-court,Open-air stalls serving local snacks and juices.,19.060725,72.849462,4.0,2,,2025-11-11T04:56:06Z,2025-11-11T04:56:06Z
+b47bc62c-c902-4057-8320-7da9b40079d4,Bandra Artisanal Bakery,bandra-artisanal-bakery,Fresh breads and patisserie with local flavors.,19.057571,72.841041,4.5,3,,2025-11-11T04:56:06Z,2025-11-11T04:56:06Z
+002ac43d-6b9a-4040-b6cf-852f7066414c,Bandra Sunset Point,bandra-sunset-point,Popular sunset lookout with benches.,19.066588,72.84237,4.1,0,,2025-11-11T04:56:06Z,2025-11-11T04:56:06Z
+09ff81a8-16d6-40c0-aef8-4b2fc8e3023a,Bandra Joggers Park,bandra-joggers-park,"Track with greenery, ideal for morning runs.",19.067234,72.841547,4.7,0,,2025-11-11T04:56:06Z,2025-11-11T04:56:06Z
+9a365fb9-3df4-4c58-8c7a-613da8e6e4e6,Juhu Coastal Café,juhu-coastal-caf,Casual seaside café known for chai & bun maska.,19.109137,72.812375,3.6,1,,2025-11-11T04:56:06Z,2025-11-11T04:56:06Z
+ec652636-1969-4e1f-8439-21c8a59a6538,Juhu Street Food Court,juhu-street-food-court,Open-air stalls serving local snacks and juices.,19.097558,72.821788,4.5,1,,2025-11-11T04:56:06Z,2025-11-11T04:56:06Z
+6c89aadc-e4e0-4576-8129-db78984d13ef,Juhu Artisanal Bakery,juhu-artisanal-bakery,Fresh breads and patisserie with local flavors.,19.094596,72.820656,4.0,2,,2025-11-11T04:56:06Z,2025-11-11T04:56:06Z
+f5432941-1bce-4bdc-b450-9588654434c3,Juhu Sunset Point,juhu-sunset-point,Popular sunset lookout with benches.,19.09502,72.821559,4.2,0,,2025-11-11T04:56:06Z,2025-11-11T04:56:06Z
+cdc41343-261a-42fd-b130-988fca459922,Juhu Joggers Park,juhu-joggers-park,"Track with greenery, ideal for morning runs.",19.105714,72.823297,4.7,0,,2025-11-11T04:56:06Z,2025-11-11T04:56:06Z
+d8d3cc91-d007-4813-9500-58aa6b77f91d,Worli Coastal Café,worli-coastal-caf,Casual seaside café known for chai & bun maska.,18.999805,72.808285,4.0,2,,2025-11-11T04:56:06Z,2025-11-11T04:56:06Z
+46c73520-fadb-4baf-bcc9-d10a651d53d1,Worli Street Food Court,worli-street-food-court,Open-air stalls serving local snacks and juices.,18.99904,72.825733,4.6,2,,2025-11-11T04:56:06Z,2025-11-11T04:56:06Z
+654b2de4-bea8-4252-9cba-b9fa172bde06,Worli Artisanal Bakery,worli-artisanal-bakery,Fresh breads and patisserie with local flavors.,19.006661,72.819183,4.7,1,,2025-11-11T04:56:06Z,2025-11-11T04:56:06Z
+c7e272bf-0d88-4903-825e-5b82c94880c6,Worli Sunset Point,worli-sunset-point,Popular sunset lookout with benches.,18.997123,72.821583,4.1,0,,2025-11-11T04:56:06Z,2025-11-11T04:56:06Z
+6a143e15-f4c2-4aba-99bc-e95bbf8fa7ef,Worli Joggers Park,worli-joggers-park,"Track with greenery, ideal for morning runs.",18.996968,72.814589,4.0,0,,2025-11-11T04:56:06Z,2025-11-11T04:56:06Z
+7fa29cb2-d2ed-4dd7-a186-ff9d341db198,Powai Coastal Café,powai-coastal-caf,Casual seaside café known for chai & bun maska.,19.132286,72.9094,4.3,2,,2025-11-11T04:56:06Z,2025-11-11T04:56:06Z
+5d4c8760-1372-41f5-82e7-4dcbad9557d4,Powai Street Food Court,powai-street-food-court,Open-air stalls serving local snacks and juices.,19.118739,72.908892,4.8,2,,2025-11-11T04:56:06Z,2025-11-11T04:56:06Z
+10070c6c-78d4-44f5-a9a4-ca37556cbc2b,Powai Artisanal Bakery,powai-artisanal-bakery,Fresh breads and patisserie with local flavors.,19.124457,72.91072,4.3,2,,2025-11-11T04:56:06Z,2025-11-11T04:56:06Z
+c3f2a0b6-dc69-42d7-bf4c-053734eeb9e1,Powai Sunset Point,powai-sunset-point,Popular sunset lookout with benches.,19.112181,72.895842,4.5,0,,2025-11-11T04:56:06Z,2025-11-11T04:56:06Z
+80e90edb-6493-4c37-96b3-434952c6e618,Powai Joggers Park,powai-joggers-park,"Track with greenery, ideal for morning runs.",19.113909,72.900555,4.1,1,,2025-11-11T04:56:06Z,2025-11-11T04:56:06Z
+e6544aa5-c372-43b6-a82a-cd5bded5adc5,Andheri Coastal Café,andheri-coastal-caf,Casual seaside café known for chai & bun maska.,19.111029,72.860087,3.8,2,,2025-11-11T04:56:06Z,2025-11-11T04:56:06Z
+537438c3-542d-44ef-bfaf-51d8af0d2a02,Andheri Street Food Court,andheri-street-food-court,Open-air stalls serving local snacks and juices.,19.127227,72.843094,4.7,1,,2025-11-11T04:56:06Z,2025-11-11T04:56:06Z
+1cc8c1ff-26af-417d-b724-2ea55b22cab3,Andheri Artisanal Bakery,andheri-artisanal-bakery,Fresh breads and patisserie with local flavors.,19.122809,72.844713,4.0,3,,2025-11-11T04:56:06Z,2025-11-11T04:56:06Z
+72fca8b5-d0fb-43f7-aa95-8639fe64705e,Andheri Sunset Point,andheri-sunset-point,Popular sunset lookout with benches.,19.127991,72.845977,4.3,0,,2025-11-11T04:56:06Z,2025-11-11T04:56:06Z
+43df0d18-5e8c-46b8-88db-9517ef339173,Andheri Joggers Park,andheri-joggers-park,"Track with greenery, ideal for morning runs.",19.114998,72.841733,4.2,0,,2025-11-11T04:56:06Z,2025-11-11T04:56:06Z
+ae72d0bb-fc19-43a5-888f-e4178e60729c,BKC Coastal Café,bkc-coastal-caf,Casual seaside café known for chai & bun maska.,19.069641,72.860582,4.2,3,,2025-11-11T04:56:06Z,2025-11-11T04:56:06Z
+f1d90f82-31cc-40a9-9806-fb31e6cd04cd,BKC Street Food Court,bkc-street-food-court,Open-air stalls serving local snacks and juices.,19.069492,72.875656,4.2,3,,2025-11-11T04:56:06Z,2025-11-11T04:56:06Z
+84ce823c-9351-42bc-8afa-29136ad390f4,BKC Artisanal Bakery,bkc-artisanal-bakery,Fresh breads and patisserie with local flavors.,19.065788,72.862086,4.2,2,,2025-11-11T04:56:06Z,2025-11-11T04:56:06Z
+caa73893-759c-4efb-b065-51dca410f222,BKC Sunset Point,bkc-sunset-point,Popular sunset lookout with benches.,19.077751,72.867891,4.3,0,,2025-11-11T04:56:06Z,2025-11-11T04:56:06Z
+92c84142-ce9c-43b4-b268-197fc78f3290,BKC Joggers Park,bkc-joggers-park,"Track with greenery, ideal for morning runs.",19.059618,72.858642,4.5,0,,2025-11-11T04:56:06Z,2025-11-11T04:56:06Z
+3a433d9a-843c-4520-ada1-989cb38b6882,Dadar Coastal Café,dadar-coastal-caf,Casual seaside café known for chai & bun maska.,19.005889,72.850823,4.0,3,,2025-11-11T04:56:06Z,2025-11-11T04:56:06Z
+536b46d7-5f59-40b5-9fb1-000cfde5f15b,Dadar Street Food Court,dadar-street-food-court,Open-air stalls serving local snacks and juices.,19.023442,72.845443,4.4,1,,2025-11-11T04:56:06Z,2025-11-11T04:56:06Z
+f3159ed6-5706-4143-9299-e0a4439fb706,Dadar Artisanal Bakery,dadar-artisanal-bakery,Fresh breads and patisserie with local flavors.,19.008871,72.844632,4.5,2,,2025-11-11T04:56:06Z,2025-11-11T04:56:06Z
+37ef94c4-ec3b-43a8-ade2-8e3687db8474,Dadar Sunset Point,dadar-sunset-point,Popular sunset lookout with benches.,19.027522,72.847582,4.3,0,,2025-11-11T04:56:06Z,2025-11-11T04:56:06Z
+b2af279c-41ff-4ef8-a6db-c3242e165cc3,Dadar Joggers Park,dadar-joggers-park,"Track with greenery, ideal for morning runs.",19.027022,72.854216,4.5,0,,2025-11-11T04:56:06Z,2025-11-11T04:56:06Z

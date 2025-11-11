@@ -1,0 +1,4 @@
+provider: mock
+units: metric
+cache_ttl_minutes: 30
+fallback_summary: "Skies look clear over Mumbai right now."

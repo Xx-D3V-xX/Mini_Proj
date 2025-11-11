@@ -1,0 +1,19 @@
+{ "type":"object",
+  "required":["pois"],
+  "properties":{
+    "status":{"type":"string"},
+    "pois":{"type":"array","items":{"type":"object",
+      "required":["id","name","lat","lon","evidence"],
+      "properties":{
+        "id":{"type":"string"},
+        "name":{"type":"string"},
+        "lat":{"type":"number"},
+        "lon":{"type":"number"},
+        "score":{"type":"number"},
+        "rating":{"type":"number"},
+        "price_level":{"type":"integer"},
+        "evidence":{"type":"array","items":{"type":"string"}}
+      }
+    }}
+  }
+}

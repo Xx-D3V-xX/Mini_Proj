@@ -1,0 +1,16 @@
+{ "type":"object",
+  "required":["days"],
+  "properties":{
+    "days":{"type":"array","items":{"type":"object",
+      "required":["date","blocks"],
+      "properties":{
+        "date":{"type":"string"},
+        "blocks":{"type":"array","items":{"type":"object",
+          "required":["start","end","poi_id"],
+          "properties":{"start":{"type":"string"},"end":{"type":"string"},"poi_id":{"type":"string"},"notes":{"type":"string"}}}},
+        "assumptions":{"type":"array","items":{"type":"string"}},
+        "weather_advice":{"type":"string"}
+      }
+    }}
+  }
+}

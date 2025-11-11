@@ -1,0 +1,9 @@
+{ "type":"object",
+  "required":["type","text"],
+  "properties":{
+    "type":{"type":"string","enum":["preference","constraint","fact"]},
+    "text":{"type":"string"},
+    "ttl_days":{"type":"integer"},
+    "hash":{"type":"string"}
+  }
+}

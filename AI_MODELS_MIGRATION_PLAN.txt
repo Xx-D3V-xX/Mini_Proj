@@ -1,0 +1,694 @@
+# MumbAI Trails — FINAL CHANGE PLAN (Back-End + AI Models + Front-End)
+# Read top-to-bottom. Perform in order. Do not skip steps. Local-only; no cloud services.
+
+################################################################################
+# 0) PRECONDITIONS (do first)
+################################################################################
+1. Ensure top-level folders exist EXACTLY as:
+   /ai-models
+   /backend
+   /frontend
+   /uploads   (local storage for images/exports; keep gitignored)
+
+2. Ensure tooling versions (local only):
+   - Node.js 22.x (LTS)  [node -v]
+   - pnpm or npm (choose one and use consistently)
+   - PostgreSQL 15+ with the database created and DATABASE_URL set in /backend/.env
+   - Prisma latest (via dev deps)
+   - (Optional) psql CLI available on PATH
+   - (Optional) OSRM not required; Routing falls back to heuristic
+
+3. Environment variables (create/update /backend/.env.local and /ai-models/.env.local):
+   - DATABASE_URL="postgresql://USER:PASS@localhost:5432/mumbai_trails"
+   - GEMINI_API_KEY="<your key>"
+   - WEATHER_API_KEY="<optional or mock>"
+   - APP_TIMEZONE="Asia/Kolkata"
+
+################################################################################
+# 1) BACKEND: PRISMA SCHEMA REPLACEMENT (NORMALIZED POIs + AGENT TABLES)
+################################################################################
+Create or replace file: /backend/prisma/schema.prisma  with the EXACT content below.
+
+-----BEGIN:/backend/prisma/schema.prisma-----
+<SCHEMA_CONTENT_WILL_BE_PASTED_BY_Codex_FROM_THIS_FILE_SECTION>
+-----END:/backend/prisma/schema.prisma-----
+
+(For convenience, paste the full schema content from the “SCHEMA CONTENT (appendix)” section at the end of this file.)
+
+Run:
+> cd backend
+> pnpm dlx prisma generate
+> pnpm dlx prisma migrate dev -n "normalized_pois_and_agents"
+
+Add trigram extension + index (optional but recommended):
+> psql "$DATABASE_URL" -c "CREATE EXTENSION IF NOT EXISTS pg_trgm;"
+> psql "$DATABASE_URL" -c "CREATE INDEX IF NOT EXISTS idx_pois_name_trgm ON pois USING gin (name gin_trgm_ops);"
+
+################################################################################
+# 2) BACKEND: DATA SEED (POIs + TAXONOMY + HOURS)
+################################################################################
+Option A) Use prepared files (recommended).
+- Place these CSVs into /backend/seed/data/ (create folders):
+  - pois_clean.csv
+  - poi_categories.csv
+  - poi_tags.csv
+  - opening_hours.csv
+- Place SQL helper into /backend/seed/sql/ai_models_seed.sql
+
+Then run (replace ABS paths):
+> psql "$DATABASE_URL" -f backend/seed/sql/ai_models_seed.sql
+> \copy pois(poi_id,name,slug,description,latitude,longitude,rating,price_level,image_url) FROM '/ABS/path/pois_clean.csv' CSV HEADER;
+> \copy poi_categories(poi_id,category) FROM '/ABS/path/poi_categories.csv' CSV HEADER;
+> \copy poi_tags(poi_id,tag) FROM '/ABS/path/poi_tags.csv' CSV HEADER;
+> \copy opening_hours(poi_id,day,open_time,close_time) FROM '/ABS/path/opening_hours.csv' CSV HEADER;
+
+################################################################################
+# 3) BACKEND: API CONTRACTS TO (CREATE/UPDATE)
+################################################################################
+Create/Update controllers, services, and routes to satisfy these endpoints:
+
+[GET] /api/pois/:id
+  -> { id, slug, name, description, address, locality, city, latitude, longitude, rating, price_level, ticket_price_inr, best_time_of_day, indoor_outdoor, time_spent_min, website_url, phone, image_url, categories:[{slug,name}], tags:[{slug,name}], opening_hours:[{day,open_time,close_time}] }
+
+[GET] /api/search
+  Query: q?, category?, tag?, min_rating?, max_price?, bbox?, open_at?=YYYY-MM-DDTHH:mm, weekday?
+  -> { results:[{id, name, lat, lon, rating, price_level, distance_km?, open_now?}] }
+
+[POST] /api/itineraries
+  Body: { user_id, title, date?, items:[{poi_id, start_time?, end_time?, note?}], mode?:TravelMode }
+  -> { id, share_token }
+
+[GET] /api/itineraries/:id
+  -> { id, title, date, items:[{poi_id, start_time, end_time, leg_distance_km, leg_time_min, note}] }
+
+[POST] /api/chat
+  Body: { session_id?, user_id?, message }
+  -> { session_id, reply_markdown, poi_ids_referenced:[] }
+
+[POST] /api/admin/import
+  Body: file upload (CSV). Validate JSON opening_hours; make slugs unique; insert into normalized tables. Return report.
+
+[POST] /api/feedback
+  Body: { user_id, poi_id, signal: "LIKE"|"DISLIKE"|"SAVE"|"REPORT"|"NOT_RELEVANT", reason? }
+  -> 204
+
+################################################################################
+# 4) AI-MODELS FOLDER: AGENT SYSTEM (FILES TO CREATE)
+################################################################################
+Create this structure under /ai-models:
+
+/ai-models/docs/
+  ARCHITECTURE.md        (describe agent flow + evidence discipline)
+  PROMPT_BOOK.md         (paste all prompts below)
+  SCHEMAS.md             (paste all JSON Schemas below)
+
+/ai-models/configs/
+  agents.yaml            (paste content below)
+  routing_profiles.yaml  (Mumbai defaults)
+  safety_policies.yaml   (blocked categories, pii rules)
+  weather.yaml           (provider config or mock)
+
+/ai-models/prompts/
+  router.prompt.md
+  policy.prompt.md
+  retriever.prompt.md
+  geo_filter.prompt.md
+  recommender.prompt.md
+  planner.prompt.md
+  routing.prompt.md
+  weather.prompt.md
+  chat.prompt.md
+  admin_cms.prompt.md
+  summarizer.prompt.md
+
+/ai-models/schemas/
+  router_plan.schema.json
+  poi_result.schema.json
+  itinerary.schema.json
+  chat_reply.schema.json
+  memory_item.schema.json
+
+/ai-models/runners/
+  orchestrator.ts        (TypeScript; single entry used by backend)
+  gemini_client.ts       (JSON-only, retry, timeout, schema enforcement)
+  guardrails.ts          (PII redaction, evidence checks)
+
+/ai-models/tools/
+  db.ts                  (Postgres client + queries for retriever)
+  hours.ts               (open-at checks)
+  routing_estimator.ts   (haversine + city speed profile; ETA/distance)
+  weather_adapter.ts     (cache-first provider; WeatherCache table)
+  maps_link.ts           (build Google Maps deep links)
+
+/ai-models/tests/
+  user_flows.json        (golden test cases for e2e agent runs)
+
+################################################################################
+# 5) AI-MODELS: REQUIRED CONTENT SNIPPETS
+################################################################################
+Create file: /ai-models/configs/agents.yaml
+-----BEGIN:/ai-models/configs/agents.yaml-----
+model: "gemini-2.5-flash"
+temperature: 0.2
+max_output_tokens:
+  router: 256
+  policy: 128
+  tools: 256
+  planner: 512
+  chat: 512
+budgets:
+  max_agent_calls_per_request: 4
+  max_total_output_tokens: 1800
+agents:
+  router:      {prompt: "prompts/router.prompt.md",      schema: "schemas/router_plan.schema.json"}
+  policy:      {prompt: "prompts/policy.prompt.md"}
+  retriever:   {prompt: "prompts/retriever.prompt.md",   schema: "schemas/poi_result.schema.json"}
+  geo_filter:  {prompt: "prompts/geo_filter.prompt.md",  schema: "schemas/poi_result.schema.json"}
+  recommender: {prompt: "prompts/recommender.prompt.md", schema: "schemas/poi_result.schema.json"}
+  planner:     {prompt: "prompts/planner.prompt.md",     schema: "schemas/itinerary.schema.json"}
+  routing:     {prompt: "prompts/routing.prompt.md"}
+  weather:     {prompt: "prompts/weather.prompt.md"}
+  chat:        {prompt: "prompts/chat.prompt.md",        schema: "schemas/chat_reply.schema.json"}
+  admin_cms:   {prompt: "prompts/admin_cms.prompt.md"}
+  summarizer:  {prompt: "prompts/summarizer.prompt.md",  schema: "schemas/memory_item.schema.json"}
+-----END:/ai-models/configs/agents.yaml-----
+
+Create file: /ai-models/prompts/router.prompt.md
+-----BEGIN:/ai-models/prompts/router.prompt.md-----
+You are ROUTER. Classify the user request and return ONLY valid JSON matching router_plan.schema.json.
+Use ≤4 downstream agent calls. If inputs are insufficient, set needs_clarification with explicit fields.
+Never invent data or POIs. Prefer retrieval first. Locale: Asia/Kolkata. Currency: INR.
+-----END:/ai-models/prompts/router.prompt.md-----
+
+Create file: /ai-models/prompts/retriever.prompt.md
+-----BEGIN:/ai-models/prompts/retriever.prompt.md-----
+Return ONLY valid JSON matching poi_result.schema.json. Input includes DB rows (id, name, lat, lon, rating, price).
+Select top-k by filters (category, tag, bbox, rating, price). If <3 results, set status:"insufficient_evidence". Never invent.
+Each item MUST include evidence:[poi_id].
+-----END:/ai-models/prompts/retriever.prompt.md-----
+
+Create file: /ai-models/prompts/recommender.prompt.md
+-----BEGIN:/ai-models/prompts/recommender.prompt.md-----
+Rank ONLY the provided candidate_ids using mood alignment, diversity, open-now, distance penalty, rating and price fit.
+Output top-k in poi_result.schema.json with evidence preserved. Do not add new items.
+-----END:/ai-models/prompts/recommender.prompt.md-----
+
+Create file: /ai-models/prompts/planner.prompt.md
+-----BEGIN:/ai-models/prompts/planner.prompt.md-----
+Build a feasible day plan from selected POIs. Respect opening hours and ETAs. If infeasible, return needs_clarification with exact conflicts.
+Include assumptions and weather_advice. Output MUST match itinerary.schema.json.
+-----END:/ai-models/prompts/planner.prompt.md-----
+
+Create file: /ai-models/prompts/chat.prompt.md
+-----BEGIN:/ai-models/prompts/chat.prompt.md-----
+Turn structured outputs into concise Markdown for the user. Reference ONLY POIs present in evidence.
+Always surface assumptions and give 1–3 quick actions. Output MUST match chat_reply.schema.json.
+-----END:/ai-models/prompts/chat.prompt.md-----
+
+Create file: /ai-models/schemas/router_plan.schema.json
+-----BEGIN:/ai-models/schemas/router_plan.schema.json-----
+{ "type":"object",
+  "required":["intent","steps"],
+  "properties":{
+    "intent":{"type":"string","enum":["discover","single_poi","itinerary","admin","chat"]},
+    "steps":{"type":"array","items":{"type":"object","required":["agent","expects"],"properties":{"agent":{"type":"string"},"input":{"type":"object"},"expects":{"type":"string"}}}},
+    "needs_clarification":{"type":"array","items":{"type":"string"}}
+  }
+}
+-----END:/ai-models/schemas/router_plan.schema.json-----
+
+Create file: /ai-models/schemas/poi_result.schema.json
+-----BEGIN:/ai-models/schemas/poi_result.schema.json-----
+{ "type":"object",
+  "required":["pois"],
+  "properties":{
+    "status":{"type":"string"},
+    "pois":{"type":"array","items":{"type":"object",
+      "required":["id","name","lat","lon","evidence"],
+      "properties":{
+        "id":{"type":"string"},
+        "name":{"type":"string"},
+        "lat":{"type":"number"},
+        "lon":{"type":"number"},
+        "score":{"type":"number"},
+        "rating":{"type":"number"},
+        "price_level":{"type":"integer"},
+        "evidence":{"type":"array","items":{"type":"string"}}
+      }
+    }}
+  }
+}
+-----END:/ai-models/schemas/poi_result.schema.json-----
+
+Create file: /ai-models/schemas/itinerary.schema.json
+-----BEGIN:/ai-models/schemas/itinerary.schema.json-----
+{ "type":"object",
+  "required":["days"],
+  "properties":{
+    "days":{"type":"array","items":{"type":"object",
+      "required":["date","blocks"],
+      "properties":{
+        "date":{"type":"string"},
+        "blocks":{"type":"array","items":{"type":"object",
+          "required":["start","end","poi_id"],
+          "properties":{"start":{"type":"string"},"end":{"type":"string"},"poi_id":{"type":"string"},"notes":{"type":"string"}}}},
+        "assumptions":{"type":"array","items":{"type":"string"}},
+        "weather_advice":{"type":"string"}
+      }
+    }}
+  }
+}
+-----END:/ai-models/schemas/itinerary.schema.json-----
+
+Create file: /ai-models/schemas/chat_reply.schema.json
+-----BEGIN:/ai-models/schemas/chat_reply.schema.json-----
+{ "type":"object",
+  "required":["message_markdown","quick_actions"],
+  "properties":{
+    "message_markdown":{"type":"string"},
+    "quick_actions":{"type":"array","items":{"type":"object",
+      "required":["label","payload"],
+      "properties":{"label":{"type":"string"},"payload":{"type":"object"}}}},
+    "poi_ids_referenced":{"type":"array","items":{"type":"string"}}
+  }
+}
+-----END:/ai-models/schemas/chat_reply.schema.json-----
+
+Create file: /ai-models/schemas/memory_item.schema.json
+-----BEGIN:/ai-models/schemas/memory_item.schema.json-----
+{ "type":"object",
+  "required":["type","text"],
+  "properties":{
+    "type":{"type":"string","enum":["preference","constraint","fact"]},
+    "text":{"type":"string"},
+    "ttl_days":{"type":"integer"},
+    "hash":{"type":"string"}
+  }
+}
+-----END:/ai-models/schemas/memory_item.schema.json-----
+
+################################################################################
+# 6) BACKEND ↔ AI-MODELS INTEGRATION
+################################################################################
+- Create /ai-models/runners/orchestrator.ts with a single exported async function handleAIRequest({user, sessionId, message, params}).
+  Steps: POLICY → ROUTER → (RETRIEVER → GEO_FILTER → RECOMMENDER → ROUTING → PLANNER → WEATHER → BUDGET) → CHAT → SUMMARIZER
+  - Persist AgentRun & AgentRunEvidence for each step.
+  - Enforce evidence discipline: only DB POIs can be surfaced by CHAT.
+- Create /ai-models/runners/gemini_client.ts using fetch to Google Generative Language API with response_mime_type=application/json, timeouts, 1 retry.
+- Create /ai-models/tools/db.ts with Postgres queries for search/open-now/poi-by-id.
+
+- Update backend route /api/chat to call orchestrator.handleAIRequest and return chat_reply.
+
+################################################################################
+# 7) FRONT-END CHANGES
+################################################################################
+1) Explore page:
+   - Replace legacy category/tags from Poi model with GET /api/search (new filters: category, tag, open_now).
+   - Add “Open now” toggle, mood chips (map to tags), price slider, rating filter.
+2) POI detail:
+   - Show opening hours (Expand per day), categories, tags, “Open now” chip, quick actions (Add to plan).
+3) Planner view:
+   - Visual order of ItineraryItem; display leg_time_min and leg_distance_km; show total distance/time; export/QR if present.
+4) Chat:
+   - Use response.message_markdown directly; render quick_actions; never show POI names not in poi_ids_referenced.
+
+################################################################################
+# 8) CLEANUP & DELETIONS
+################################################################################
+- Remove any code assuming Poi.category (string) and Poi.tags (string[]). Use joins via poi_categories/tags.
+- Delete obsolete seed scripts referring to old schema.
+- Ensure /uploads is gitignored and used for local assets only.
+
+################################################################################
+# 9) VERIFICATION CHECKS
+################################################################################
+- Run migrations: pnpm dlx prisma migrate dev
+- Seed data via psql \copy commands
+- Smoke tests:
+  a) GET /api/search?q=museum&open_at=2025-11-11T17:30 → returns 3–8 items with open_now flags
+  b) POST /api/itineraries with 3 POIs → returns id and items with leg metrics
+  c) POST /api/chat “I want an artsy evening plan in Bandra” → returns grounded POIs (poi_ids_referenced present)
+- Measure grounding: ensure all CHAT outputs list poi_ids_referenced ≥1 when recommending.
+
+################################################################################
+# APPENDIX: SCHEMA CONTENT (paste into /backend/prisma/schema.prisma)
+################################################################################
+<PASTE THE FULL SCHEMA FROM THE CHAT MESSAGE VERBATIM HERE>
+
+// ---------- Generators & Datasource ----------
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// ---------- Enums ----------
+enum Role { ADMIN USER }
+enum TravelMode { WALK METRO BUS CAR AUTO MIXED }
+enum TimeOfDay { MORNING AFTERNOON EVENING NIGHT }
+enum IndoorOutdoor { INDOOR OUTDOOR MIXED }
+enum FeedbackSignal { LIKE DISLIKE SAVE REPORT NOT_RELEVANT }
+enum Weekday { MON TUE WED THU FRI SAT SUN }
+enum MemoryScope { GLOBAL CHAT }
+enum AgentName {
+  ROUTER POLICY RETRIEVER GEO_FILTER RECOMMENDER PLANNER ROUTING WEATHER BUDGET
+  CHAT ADMIN_CMS SUMMARIZER FEEDBACK EVAL
+}
+
+// ---------- Core Users ----------
+model User {
+  id            String         @id @default(uuid()) @map("id")
+  email         String         @unique
+  password_hash String         @map("password_hash")
+  name          String?
+  role          Role           @default(USER)
+  preferences   Json?          // legacy free-form; kept for compatibility
+  embedding     Json?          // user profile embedding (JSON list of floats)
+  created_at    DateTime       @default(now())
+  updated_at    DateTime       @updatedAt
+
+  profile       UserProfile?
+  itineraries   Itinerary[]
+  reviews       Review[]
+  feedbacks     Feedback[]
+  chat_sessions ChatSession[]
+  memories      AgentMemory[]
+
+  @@map("users")
+}
+
+model UserProfile {
+  user_id           String   @id
+  user              User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  display_name      String?
+  city              String?  @default("Mumbai")
+  home_lat          Float?
+  home_lon          Float?
+  budget_level      Int?     // 0..3 typical
+  max_walk_km       Float?
+  preferred_modes   TravelMode[]
+  dietary_prefs     String[] // e.g., "veg","jain","halal"
+  interests         String[] // e.g., "street-food","photography","kids"
+
+  created_at        DateTime @default(now())
+  updated_at        DateTime @updatedAt
+
+  @@map("user_profiles")
+}
+
+// ---------- Taxonomy ----------
+model Category {
+  id           String  @id @default(uuid())
+  slug         String  @unique
+  display_name String
+
+  poi_links    PoiCategory[]
+
+  @@map("categories")
+}
+
+model Tag {
+  id           String  @id @default(uuid())
+  slug         String  @unique
+  display_name String
+
+  poi_links    PoiTag[]
+
+  @@map("tags")
+}
+
+// ---------- Places of Interest ----------
+model Poi {
+  id                String         @id @default(uuid())
+  slug              String         @unique
+  name              String
+  description       String?
+  address           String?
+  locality          String?
+  city              String?        @default("Mumbai")
+  latitude          Float
+  longitude         Float
+  rating            Float?
+  price_level       Int?
+  ticket_price_inr  Int?
+  best_time_of_day  TimeOfDay?
+  indoor_outdoor    IndoorOutdoor?
+  time_spent_min    Int?
+  website_url       String?
+  phone             String?
+  image_url         String?
+
+  embedding         Json?          // POI embedding (JSON list); pgvector later
+  source            SourceInfo?
+
+  opening_hours     OpeningHour[]
+  category_links    PoiCategory[]
+  tag_links         PoiTag[]
+  reviews           Review[]
+  feedbacks         Feedback[]
+
+  created_at        DateTime       @default(now())
+  updated_at        DateTime       @updatedAt
+
+  @@map("pois")
+  @@index([latitude, longitude], map: "poi_geo_idx")
+}
+
+model SourceInfo {
+  id          String @id @default(uuid())
+  poi_id      String @unique
+  poi         Poi    @relation(fields: [poi_id], references: [id], onDelete: Cascade)
+
+  source_name String          // e.g., "csv_seed","osm","manual"
+  source_id   String?         // upstream ID if any
+  raw         Json?           // original row for traceability
+
+  @@map("poi_sources")
+}
+
+model PoiCategory {
+  poi_id     String
+  category_id String
+
+  poi       Poi      @relation(fields: [poi_id], references: [id], onDelete: Cascade)
+  category  Category @relation(fields: [category_id], references: [id], onDelete: Cascade)
+
+  @@id([poi_id, category_id])
+  @@map("poi_categories")
+}
+
+model PoiTag {
+  poi_id  String
+  tag_id  String
+
+  poi   Poi @relation(fields: [poi_id], references: [id], onDelete: Cascade)
+  tag   Tag @relation(fields: [tag_id], references: [id], onDelete: Cascade)
+
+  @@id([poi_id, tag_id])
+  @@map("poi_tags")
+}
+
+model OpeningHour {
+  poi_id     String
+  day        Weekday
+  open_time  String   // "HH:MM" 24h
+  close_time String   // "HH:MM"
+
+  poi        Poi      @relation(fields: [poi_id], references: [id], onDelete: Cascade)
+
+  @@id([poi_id, day, open_time, close_time])
+  @@map("opening_hours")
+}
+
+// ---------- Planning / Routing ----------
+model Itinerary {
+  id                String    @id @default(uuid())
+  user_id           String
+  user              User      @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  title             String
+  date              DateTime?
+  share_token       String?   @unique
+  total_distance_km Float?
+  total_time_min    Int?
+  route_polyline    String?   // encoded polyline for map preview
+
+  items             ItineraryItem[]
+
+  created_at        DateTime  @default(now())
+  updated_at        DateTime  @updatedAt
+
+  @@map("itineraries")
+  @@index([user_id])
+}
+
+model ItineraryItem {
+  id              String    @id @default(uuid())
+  itinerary_id    String
+  itinerary       Itinerary @relation(fields: [itinerary_id], references: [id], onDelete: Cascade)
+
+  poi_id          String
+  poi             Poi       @relation(fields: [poi_id], references: [id])
+
+  order_index     Int       @default(0)
+  start_time      DateTime?
+  end_time        DateTime?
+  leg_distance_km Float?
+  leg_time_min    Int?
+  note            String?
+
+  @@map("itinerary_items")
+  @@index([itinerary_id])
+  @@index([poi_id])
+}
+
+// ---------- UGC / Signals ----------
+model Review {
+  id         String   @id @default(uuid())
+  user_id    String
+  poi_id     String
+  rating     Int
+  comment    String?
+  created_at DateTime @default(now())
+
+  user       User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  poi        Poi      @relation(fields: [poi_id], references: [id], onDelete: Cascade)
+
+  @@map("reviews")
+  @@index([poi_id])
+}
+
+model Feedback {
+  id         String         @id @default(uuid())
+  user_id    String
+  poi_id     String
+  signal     FeedbackSignal
+  reason     String?
+  created_at DateTime       @default(now())
+
+  user       User           @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  poi        Poi            @relation(fields: [poi_id], references: [id], onDelete: Cascade)
+
+  @@map("feedbacks")
+  @@index([poi_id])
+}
+
+// ---------- Chat / Memory / Evaluation ----------
+model ChatSession {
+  id          String        @id @default(uuid())
+  user_id     String?
+  user        User?         @relation(fields: [user_id], references: [id], onDelete: SetNull)
+
+  title       String?
+  started_at  DateTime      @default(now())
+  updated_at  DateTime      @updatedAt
+
+  messages    ChatMessage[]
+  runs        AgentRun[]
+  memories    AgentMemory[]
+
+  @@map("chat_sessions")
+  @@index([user_id])
+}
+
+model ChatMessage {
+  id         String     @id @default(uuid())
+  session_id String
+  session    ChatSession @relation(fields: [session_id], references: [id], onDelete: Cascade)
+
+  sender     String      // "user" | "assistant" | "tool"
+  role       String?     // optional free-form
+  agent      AgentName?
+  content    String
+  metadata   Json?
+  created_at DateTime    @default(now())
+
+  @@map("chat_messages")
+  @@index([session_id])
+}
+
+model AgentRun {
+  id          String      @id @default(uuid())
+  session_id  String?
+  session     ChatSession? @relation(fields: [session_id], references: [id], onDelete: SetNull)
+
+  agent       AgentName
+  input       Json
+  output      Json?
+  tool_usage  Json?       // tokens, timing, costs, cache hits
+
+  evidences   AgentRunEvidence[]
+
+  created_at  DateTime    @default(now())
+
+  @@map("agent_runs")
+  @@index([session_id])
+}
+
+model AgentRunEvidence {
+  run_id String
+  poi_id String
+
+  run    AgentRun @relation(fields: [run_id], references: [id], onDelete: Cascade)
+  poi    Poi      @relation(fields: [poi_id], references: [id], onDelete: Cascade)
+
+  @@id([run_id, poi_id])
+  @@map("agent_run_evidence")
+}
+
+model AgentMemory {
+  id             String      @id @default(uuid())
+  user_id        String?
+  session_id     String?
+  scope          MemoryScope
+  agent          AgentName?
+  summary        String      // compact natural-language memory
+  json_payload   Json?       // structured memory (preferences, blacklist, etc.)
+  last_refreshed DateTime    @default(now())
+  expires_at     DateTime?
+
+  user    User?        @relation(fields: [user_id], references: [id], onDelete: SetNull)
+  session ChatSession? @relation(fields: [session_id], references: [id], onDelete: Cascade)
+
+  @@map("agent_memories")
+  @@index([user_id])
+  @@index([session_id])
+}
+
+model WeatherCache {
+  id         String   @id @default(uuid())
+  lat        Float
+  lon        Float
+  ts         DateTime
+  provider   String
+  payload    Json
+  created_at DateTime @default(now())
+
+  @@unique([lat, lon, ts, provider])
+  @@map("weather_cache")
+}
+
+// ---------- Static/Upload ----------
+model Media {
+  id           String  @id @default(uuid())
+  user_id      String?
+  poi_id       String?
+  url          String?
+  storage_path String
+  content_type String?
+  width        Int?
+  height       Int?
+  created_at   DateTime @default(now())
+
+  user         User?   @relation(fields: [user_id], references: [id], onDelete: SetNull)
+  poi          Poi?    @relation(fields: [poi_id], references: [id], onDelete: SetNull)
+
+  @@map("media")
+  @@index([poi_id])
+  @@index([user_id])
+}
+
+# END

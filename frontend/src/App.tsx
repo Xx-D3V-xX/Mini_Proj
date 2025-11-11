@@ -12,6 +12,7 @@ import Landing from "@/pages/Landing";
 import Explore from "@/pages/Explore";
 import Profile from "@/pages/Profile";
 import ItineraryGenerator from "@/pages/ItineraryGenerator";
+import Chat from "@/pages/Chat";
 import NotFound from "@/pages/not-found";
 
 function AppContent() {
@@ -41,6 +42,9 @@ function AppContent() {
           <ProtectedRoute>
             <ItineraryGenerator />
           </ProtectedRoute>
+        </Route>
+        <Route path="/chat">
+          <Chat />
         </Route>
         <Route component={NotFound} />
       </Switch>

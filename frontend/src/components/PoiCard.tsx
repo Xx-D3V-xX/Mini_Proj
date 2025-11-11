@@ -21,11 +21,12 @@ interface PoiCardProps {
 }
 
 export function PoiCard({ poi, onSelect }: PoiCardProps) {
+  const primaryCategory = poi.categories[0]?.name ?? "POI";
   const [imgSrc, setImgSrc] = useState(
-    poi.image_url || `https://source.unsplash.com/featured/?mumbai,${encodeURIComponent(poi.category)}`
+    poi.image_url || `https://source.unsplash.com/featured/?mumbai,${encodeURIComponent(primaryCategory)}`
   );
 
-  const tags = useMemo(() => poi.tags?.slice(0, 3).join(" · "), [poi.tags]);
+  const tags = useMemo(() => poi.tags?.map((tag) => tag.name).slice(0, 3).join(" · "), [poi.tags]);
 
   return (
     <Card
@@ -43,7 +44,7 @@ export function PoiCard({ poi, onSelect }: PoiCardProps) {
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
         <Badge className="absolute top-3 left-3 bg-card/90 backdrop-blur-sm border-card-border text-card-foreground">
-          {poi.category}
+          {primaryCategory}
         </Badge>
         {poi.reason && (
           <div className="absolute bottom-3 left-3 right-3 text-xs font-medium text-primary-foreground bg-primary/90 rounded-md px-3 py-1 shadow-lg">
@@ -61,7 +62,7 @@ export function PoiCard({ poi, onSelect }: PoiCardProps) {
                 {tags}
               </div>
             ) : (
-              <p className="text-xs text-muted-foreground">{poi.category}</p>
+              <p className="text-xs text-muted-foreground">{primaryCategory}</p>
             )}
           </div>
           <div className="flex items-center gap-1 text-sm text-muted-foreground">

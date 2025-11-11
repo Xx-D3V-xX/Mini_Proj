@@ -1,0 +1,26 @@
+# Default routing heuristics for Mumbai
+profiles:
+  WALK:
+    avg_kmh: 4.0
+    max_leg_km: 2.5
+    buffer_min: 5
+  AUTO:
+    avg_kmh: 20
+    traffic_multiplier:
+      weekday_peak: 1.4
+      off_peak: 1.1
+  CAR:
+    avg_kmh: 26
+    traffic_multiplier:
+      weekday_peak: 1.5
+      off_peak: 1.2
+  BUS:
+    avg_kmh: 18
+    transfer_penalty_min: 8
+  METRO:
+    avg_kmh: 34
+    transfer_penalty_min: 6
+    access_penalty_min: 4
+  MIXED:
+    avg_kmh: 15
+    notes: "Use when user did not specify a mode; blends WALK + AUTO"

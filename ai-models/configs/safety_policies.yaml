@@ -1,0 +1,13 @@
+blocked_categories:
+  - violence
+  - self_harm
+  - hate_speech
+  - adult_content
+pii_rules:
+  redact_email: true
+  redact_phone: true
+  redact_address: true
+  fallback_message: "I’m sorry, but I can’t help with that request."
+policy_notes:
+  - "Never leak another user's itinerary or memories"
+  - "Follow Indian IT Act guidelines"

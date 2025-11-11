@@ -8,24 +8,35 @@ export class AnalyticsService {
   constructor(private readonly prisma: PrismaService) {}
 
   async overview() {
-    const groupByArgs = Prisma.validator<Prisma.PoiGroupByArgs>()({
-      by: ['category'],
-      _avg: { rating: true },
-      _count: { _all: true },
-    });
-    const [poiCount, itineraryCount, avgRatingByCategory] = await this.prisma.$transaction([
+    const [poiCount, itineraryCount, categories] = await this.prisma.$transaction([
       this.prisma.poi.count(),
       this.prisma.itinerary.count(),
-      this.prisma.poi.groupBy(groupByArgs),
+      this.prisma.category.findMany({
+        select: {
+          slug: true,
+          display_name: true,
+          poi_links: {
+            select: {
+              poi: { select: { rating: true } },
+            },
+          },
+        },
+      }),
     ]);
-    return {
-      poiCount,
-      itineraryCount,
-      categories: avgRatingByCategory.map((row) => ({
-        category: row.category,
-        avgRating: row._avg.rating,
-        count: row._count._all,
-      })),
-    };
+
+    const categoryStats = categories.map((category) => {
+      const ratings = category.poi_links
+        .map((link) => link.poi.rating)
+        .filter((value): value is number => typeof value === 'number');
+      const avgRating = ratings.length ? ratings.reduce((a, b) => a + b, 0) / ratings.length : null;
+      return {
+        slug: category.slug,
+        name: category.display_name,
+        avgRating,
+        count: category.poi_links.length,
+      };
+    });
+
+    return { poiCount, itineraryCount, categories: categoryStats };
   }
 }

@@ -1,12 +1,11 @@
 import { useMemo, useState } from "react";
-import { useMutation, useQuery } from "@tanstack/react-query";
-import { Search, Sparkles } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { Search } from "lucide-react";
 
 import { EmptyState } from "@/components/EmptyState";
 import { LoadingState } from "@/components/LoadingState";
-import { PoiCard } from "@/components/PoiCard";
+import { SearchResultCard } from "@/components/SearchResultCard";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -15,27 +14,22 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Skeleton } from "@/components/ui/skeleton";
-import { useToast } from "@/hooks/use-toast";
+import { Slider } from "@/components/ui/slider";
+import { Switch } from "@/components/ui/switch";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { apiRequest } from "@/lib/queryClient";
-import type { Poi } from "@/lib/types";
+import type { SearchResult } from "@/lib/types";
 
 const CATEGORY_OPTIONS = [
   { label: "All Categories", value: "all" },
-  { label: "Landmark", value: "Landmark" },
-  { label: "Viewpoint", value: "Viewpoint" },
-  { label: "Museum", value: "Museum" },
-  { label: "Nature", value: "Nature" },
-  { label: "Market", value: "Market" },
-  { label: "Temple", value: "Temple" },
-];
-
-const PRICE_OPTIONS = [
-  { label: "All Budgets", value: "all" },
-  { label: "Free", value: "0" },
-  { label: "Budget friendly", value: "1" },
-  { label: "Mid-range", value: "2" },
-  { label: "Premium", value: "3" },
+  { label: "Landmark", value: "landmark" },
+  { label: "Viewpoint", value: "viewpoint" },
+  { label: "Museum", value: "museum" },
+  { label: "Nature", value: "nature" },
+  { label: "Market", value: "market" },
+  { label: "Temple", value: "temple" },
+  { label: "Park", value: "park" },
+  { label: "Food & Drinks", value: "food-drinks" },
 ];
 
 const RATING_OPTIONS = [
@@ -45,72 +39,47 @@ const RATING_OPTIONS = [
 ];
 
 const MOOD_OPTIONS = [
-  { label: "Cultural immersion", value: "culture" },
-  { label: "Foodie crawl", value: "foodie" },
-  { label: "Sunset & sea", value: "coastal" },
-  { label: "Family day out", value: "family" },
-  { label: "Spiritual reset", value: "spiritual" },
+  { label: "Cultural immersion", value: "culture", tag: "landmark" },
+  { label: "Foodie crawl", value: "foodie", tag: "food" },
+  { label: "Sunset & sea", value: "coastal", tag: "outdoors" },
+  { label: "Family day out", value: "family", tag: "park" },
+  { label: "Spiritual reset", value: "spiritual", tag: "temple" },
 ];
 
 export default function Explore() {
   const [searchQuery, setSearchQuery] = useState("");
   const [category, setCategory] = useState<string>("all");
-  const [priceLevel, setPriceLevel] = useState<string>("all");
   const [rating, setRating] = useState<string>("all");
+  const [maxPrice, setMaxPrice] = useState<number>(3);
+  const [openNow, setOpenNow] = useState(false);
   const [mood, setMood] = useState<string>(MOOD_OPTIONS[0].value);
-  const [recommendations, setRecommendations] = useState<Poi[] | null>(null);
-  const { toast } = useToast();
 
-  const queryParams = useMemo(() => ({ searchQuery, category, priceLevel, rating }), [
+  const moodTag = useMemo(() => MOOD_OPTIONS.find((option) => option.value === mood)?.tag ?? null, [mood]);
+
+  const queryParams = useMemo(() => ({ searchQuery, category, rating, maxPrice, openNow, moodTag }), [
     searchQuery,
     category,
-    priceLevel,
     rating,
+    maxPrice,
+    openNow,
+    moodTag,
   ]);
 
   const { data, isLoading } = useQuery({
-    queryKey: ["/pois", queryParams],
+    queryKey: ["/search", queryParams],
     queryFn: async () => {
-      const params: Record<string, string | number> = { page: 1 };
-      if (searchQuery.trim()) params.search = searchQuery.trim();
+      const params: Record<string, string | number> = {};
+      if (searchQuery.trim()) params.q = searchQuery.trim();
       if (category !== "all") params.category = category;
-      if (priceLevel !== "all") params.price_level = Number(priceLevel);
-      if (rating !== "all") params.rating_min = Number(rating);
-      return apiRequest<{ items: Poi[]; total: number }>("GET", "/pois", undefined, { params });
+      if (rating !== "all") params.min_rating = Number(rating);
+      if (maxPrice < 3) params.max_price = maxPrice;
+      if (moodTag) params.tag = moodTag;
+      if (openNow) params.open_at = new Date().toISOString();
+      return apiRequest<{ results: SearchResult[] }>("GET", "/search", undefined, { params });
     },
   });
 
-  const recommendMutation = useMutation({
-    mutationFn: async () => {
-      const filters: Record<string, string | number | string[] | undefined> = {};
-      if (category !== "all") filters.category = category;
-      if (priceLevel !== "all") filters.price_level = Number(priceLevel);
-      if (rating !== "all") filters.rating_min = Number(rating);
-      const response = await apiRequest<{ items: Poi[] }>("POST", "/integrations/recommend", {
-        mood,
-        prefs: {},
-        location: { lat: 19.076, lng: 72.8777 },
-        filters,
-      });
-      return response.items;
-    },
-    onSuccess: (items) => {
-      setRecommendations(items);
-      toast({
-        title: "Tailored picks ready",
-        description: "We matched POIs to your mood and filters.",
-      });
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Could not fetch AI picks",
-        description: error.message,
-        variant: "destructive",
-      });
-    },
-  });
-
-  const pois = data?.items ?? [];
+  const results = data?.results ?? [];
 
   return (
     <div className="min-h-screen bg-background">
@@ -179,63 +148,54 @@ export default function Explore() {
           </div>
         </div>
 
-        {/* AI Suggestions */}
+        {/* Mood & advanced filters */}
         <div className="grid gap-6 md:grid-cols-[2fr_3fr] mb-10">
-          <div className="border rounded-2xl p-6 bg-card">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                <Sparkles className="w-5 h-5 text-primary" />
-              </div>
-              <div>
-                <p className="font-serif text-xl font-semibold">Need inspiration?</p>
-                <p className="text-sm text-muted-foreground">
-                  Let the AI shortlist places that match your vibe.
-                </p>
-              </div>
+          <div className="border rounded-2xl p-6 bg-card space-y-4">
+            <div>
+              <p className="font-serif text-xl font-semibold mb-2">Mood presets</p>
+              <p className="text-sm text-muted-foreground mb-4">
+                Pick the vibe and we will automatically tune the tags.
+              </p>
+              <ToggleGroup type="single" value={mood} onValueChange={(value) => value && setMood(value)} className="flex flex-wrap gap-2">
+                {MOOD_OPTIONS.map((option) => (
+                  <ToggleGroupItem key={option.value} value={option.value} className="px-4 py-2 rounded-full border data-[state=on]:bg-primary data-[state=on]:text-primary-foreground">
+                    {option.label}
+                  </ToggleGroupItem>
+                ))}
+              </ToggleGroup>
             </div>
-            <div className="space-y-4">
-              <Select value={mood} onValueChange={setMood}>
-                <SelectTrigger className="w-full" data-testid="select-mood">
-                  <SelectValue placeholder="Select a mood" />
-                </SelectTrigger>
-                <SelectContent>
-                  {MOOD_OPTIONS.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Button
-                className="w-full"
-                onClick={() => recommendMutation.mutate()}
-                disabled={recommendMutation.isPending}
-              >
-                {recommendMutation.isPending ? "Generating..." : "Get AI suggestions"}
-              </Button>
-              {recommendations?.length ? (
-                <div className="space-y-2">
-                  <p className="text-xs uppercase text-muted-foreground">Suggested</p>
-                  <div className="flex flex-wrap gap-2">
-                    {recommendations.slice(0, 6).map((poi) => (
-                      <Badge key={poi.id} variant="secondary">
-                        {poi.name}
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-              ) : null}
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <p className="font-medium">Max budget</p>
+                <span className="text-sm text-muted-foreground">Up to {["Free", "Budget", "Mid-range", "Premium"][maxPrice]}</span>
+              </div>
+              <Slider
+                max={3}
+                min={0}
+                step={1}
+                value={[maxPrice]}
+                onValueChange={(value) => setMaxPrice(value[0] ?? 3)}
+              />
+            </div>
+            <div className="flex items-center justify-between rounded-xl border px-4 py-3 bg-muted/40">
+              <div>
+                <p className="font-medium">Open now</p>
+                <p className="text-sm text-muted-foreground">Only show places currently open</p>
+              </div>
+              <Switch checked={openNow} onCheckedChange={setOpenNow} />
             </div>
           </div>
           <div className="border rounded-2xl p-6 bg-muted/40">
             <p className="font-semibold mb-4">Live filters</p>
             <div className="flex flex-wrap gap-2 text-sm text-muted-foreground">
               {searchQuery && <Badge variant="outline">Search: {searchQuery}</Badge>}
-              {category !== "all" && <Badge variant="outline">Category: {category}</Badge>}
-              {priceLevel !== "all" && <Badge variant="outline">Budget: {PRICE_OPTIONS.find((o) => o.value === priceLevel)?.label}</Badge>}
+              {category !== "all" && <Badge variant="outline">Category: {CATEGORY_OPTIONS.find((o) => o.value === category)?.label}</Badge>}
               {rating !== "all" && <Badge variant="outline">Rating ≥ {rating}</Badge>}
-              {!searchQuery && category === "all" && priceLevel === "all" && rating === "all" && (
-                <p className="text-xs">No filters applied—showing the freshest imports from the CSV dataset.</p>
+              {maxPrice < 3 && <Badge variant="outline">Budget ≤ {["Free", "Budget", "Mid-range", "Premium"][maxPrice]}</Badge>}
+              {openNow && <Badge variant="outline">Open now</Badge>}
+              {moodTag && <Badge variant="outline">Mood tag: {moodTag}</Badge>}
+              {!searchQuery && category === "all" && rating === "all" && maxPrice === 3 && !openNow && !moodTag && (
+                <p className="text-xs">No filters applied—showing everything we have.</p>
               )}
             </div>
           </div>
@@ -244,14 +204,14 @@ export default function Explore() {
         {/* Results */}
         {isLoading ? (
           <LoadingState />
-        ) : pois.length > 0 ? (
+        ) : results.length > 0 ? (
           <>
             <div className="mb-4 text-sm text-muted-foreground" data-testid="text-results-count">
-              Showing {pois.length} places
+              Showing {results.length} places
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {pois.map((poi) => (
-                <PoiCard key={poi.id} poi={poi} />
+              {results.map((result) => (
+                <SearchResultCard key={result.id} result={result} />
               ))}
             </div>
           </>
@@ -261,11 +221,6 @@ export default function Explore() {
             description="Try adjusting your filters or widen the search"
             icon="map"
           />
-        )}
-        {recommendMutation.isPending && (
-          <div className="mt-8">
-            <Skeleton className="h-32 w-full rounded-2xl" />
-          </div>
         )}
       </div>
     </div>

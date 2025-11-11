@@ -28,6 +28,8 @@ Thumbs.db
 /backend/uploads/*
 !/backend/uploads/.gitkeep
 
+/uploads
+
 # Model cache
 /ai-models/app/data/cache/*
 !/ai-models/app/data/cache/.gitkeep

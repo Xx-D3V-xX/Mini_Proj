@@ -17,6 +17,6 @@
       "*": ["node_modules/*", "src/*"]
     }
   },
-  "include": ["src/**/*"],
+  "include": ["src/**/*", "../ai-models/**/*.ts"],
   "exclude": ["node_modules", "dist", "test", "**/*spec.ts"]
 }

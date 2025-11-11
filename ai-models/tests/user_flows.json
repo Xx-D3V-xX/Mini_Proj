@@ -1,0 +1,18 @@
+[
+  {
+    "name": "Artsy evening in Bandra",
+    "input": "Plan a creative evening in Bandra with cafes and galleries",
+    "expected": {
+      "poi_ids": ["bandra-art-gallery", "salt-water-cafe"],
+      "intent": "itinerary"
+    }
+  },
+  {
+    "name": "Kid-friendly morning",
+    "input": "What can I do with kids on Sunday morning near Colaba?",
+    "expected": {
+      "intent": "discover",
+      "min_results": 3
+    }
+  }
+]

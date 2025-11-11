@@ -1,0 +1,23 @@
+model: "gemini-2.5-flash"
+temperature: 0.2
+max_output_tokens:
+  router: 256
+  policy: 128
+  tools: 256
+  planner: 512
+  chat: 512
+budgets:
+  max_agent_calls_per_request: 4
+  max_total_output_tokens: 1800
+agents:
+  router:      {prompt: "prompts/router.prompt.md",      schema: "schemas/router_plan.schema.json"}
+  policy:      {prompt: "prompts/policy.prompt.md"}
+  retriever:   {prompt: "prompts/retriever.prompt.md",   schema: "schemas/poi_result.schema.json"}
+  geo_filter:  {prompt: "prompts/geo_filter.prompt.md",  schema: "schemas/poi_result.schema.json"}
+  recommender: {prompt: "prompts/recommender.prompt.md", schema: "schemas/poi_result.schema.json"}
+  planner:     {prompt: "prompts/planner.prompt.md",     schema: "schemas/itinerary.schema.json"}
+  routing:     {prompt: "prompts/routing.prompt.md"}
+  weather:     {prompt: "prompts/weather.prompt.md"}
+  chat:        {prompt: "prompts/chat.prompt.md",        schema: "schemas/chat_reply.schema.json"}
+  admin_cms:   {prompt: "prompts/admin_cms.prompt.md"}
+  summarizer:  {prompt: "prompts/summarizer.prompt.md",  schema: "schemas/memory_item.schema.json"}

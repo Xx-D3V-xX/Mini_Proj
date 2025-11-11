@@ -1,3 +1,4 @@
+// ---------- Generators & Datasource ----------
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
@@ -7,65 +8,266 @@ generator client {
   provider = "prisma-client-js"
 }
 
+// ---------- Enums ----------
 enum Role {
   ADMIN
   USER
 }
 
+enum TravelMode {
+  WALK
+  METRO
+  BUS
+  CAR
+  AUTO
+  MIXED
+}
+
+enum TimeOfDay {
+  MORNING
+  AFTERNOON
+  EVENING
+  NIGHT
+}
+
+enum IndoorOutdoor {
+  INDOOR
+  OUTDOOR
+  MIXED
+}
+
+enum FeedbackSignal {
+  LIKE
+  DISLIKE
+  SAVE
+  REPORT
+  NOT_RELEVANT
+}
+
+enum Weekday {
+  MON
+  TUE
+  WED
+  THU
+  FRI
+  SAT
+  SUN
+}
+
+enum MemoryScope {
+  GLOBAL
+  CHAT
+}
+
+enum AgentName {
+  ROUTER
+  POLICY
+  RETRIEVER
+  GEO_FILTER
+  RECOMMENDER
+  PLANNER
+  ROUTING
+  WEATHER
+  BUDGET
+  CHAT
+  ADMIN_CMS
+  SUMMARIZER
+  FEEDBACK
+  EVAL
+}
+
+// ---------- Core Users ----------
 model User {
-  id            String      @id @default(uuid()) @map("id")
-  email         String      @unique
-  password_hash String      @map("password_hash")
+  id            String         @id @default(uuid()) @map("id")
+  email         String         @unique
+  password_hash String         @map("password_hash")
   name          String?
-  role          Role        @default(USER)
-  preferences   Json?
-  embedding     Json?
-  created_at    DateTime    @default(now())
-  updated_at    DateTime    @updatedAt
+  role          Role           @default(USER)
+  preferences   Json?          // legacy free-form; kept for compatibility
+  embedding     Json?          // user profile embedding (JSON list of floats)
+  created_at    DateTime       @default(now())
+  updated_at    DateTime       @updatedAt
+
+  profile       UserProfile?
   itineraries   Itinerary[]
   reviews       Review[]
   feedbacks     Feedback[]
+  chat_sessions ChatSession[]
+  memories      AgentMemory[]
+  media         Media[]
 
   @@map("users")
 }
 
+model UserProfile {
+  user_id           String   @id
+  user              User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  display_name      String?
+  city              String?  @default("Mumbai")
+  home_lat          Float?
+  home_lon          Float?
+  budget_level      Int?     // 0..3 typical
+  max_walk_km       Float?
+  preferred_modes   TravelMode[]
+  dietary_prefs     String[] // e.g., "veg","jain","halal"
+  interests         String[] // e.g., "street-food","photography","kids"
+
+  created_at        DateTime @default(now())
+  updated_at        DateTime @updatedAt
+
+  @@map("user_profiles")
+}
+
+// ---------- Taxonomy ----------
+model Category {
+  id           String  @id @default(uuid())
+  slug         String  @unique
+  display_name String
+
+  poi_links    PoiCategory[]
+
+  @@map("categories")
+}
+
+model Tag {
+  id           String  @id @default(uuid())
+  slug         String  @unique
+  display_name String
+
+  poi_links    PoiTag[]
+
+  @@map("tags")
+}
+
+// ---------- Places of Interest ----------
 model Poi {
-  id            String     @id @default(uuid())
-  name          String
-  description   String
-  category      String
-  latitude      Float
-  longitude     Float
-  rating        Float?
-  price_level   Int?
-  opening_hours Json?
-  image_url     String?
-  tags          String[]
-  created_at    DateTime   @default(now())
-  updated_at    DateTime   @updatedAt
-  reviews       Review[]
-  feedbacks     Feedback[]
+  id                String         @id @default(uuid())
+  slug              String         @unique
+  name              String
+  description       String?
+  address           String?
+  locality          String?
+  city              String?        @default("Mumbai")
+  latitude          Float
+  longitude         Float
+  rating            Float?
+  price_level       Int?
+  ticket_price_inr  Int?
+  best_time_of_day  TimeOfDay?
+  indoor_outdoor    IndoorOutdoor?
+  time_spent_min    Int?
+  website_url       String?
+  phone             String?
+  image_url         String?
+
+  embedding         Json?          // POI embedding (JSON list); pgvector later
+  source            SourceInfo?
+
+  opening_hours     OpeningHour[]
+  category_links    PoiCategory[]
+  tag_links         PoiTag[]
+  reviews           Review[]
+  feedbacks         Feedback[]
+  itinerary_items   ItineraryItem[]
+  evidences         AgentRunEvidence[]
+  media             Media[]
+
+  created_at        DateTime       @default(now())
+  updated_at        DateTime       @updatedAt
 
   @@map("pois")
   @@index([latitude, longitude], map: "poi_geo_idx")
 }
 
+model SourceInfo {
+  id          String @id @default(uuid())
+  poi_id      String @unique
+  poi         Poi    @relation(fields: [poi_id], references: [id], onDelete: Cascade)
+
+  source_name String          // e.g., "csv_seed","osm","manual"
+  source_id   String?         // upstream ID if any
+  raw         Json?           // original row for traceability
+
+  @@map("poi_sources")
+}
+
+model PoiCategory {
+  poi_id     String
+  category_id String
+
+  poi       Poi      @relation(fields: [poi_id], references: [id], onDelete: Cascade)
+  category  Category @relation(fields: [category_id], references: [id], onDelete: Cascade)
+
+  @@id([poi_id, category_id])
+  @@map("poi_categories")
+}
+
+model PoiTag {
+  poi_id  String
+  tag_id  String
+
+  poi   Poi @relation(fields: [poi_id], references: [id], onDelete: Cascade)
+  tag   Tag @relation(fields: [tag_id], references: [id], onDelete: Cascade)
+
+  @@id([poi_id, tag_id])
+  @@map("poi_tags")
+}
+
+model OpeningHour {
+  poi_id     String
+  day        Weekday
+  open_time  String   // "HH:MM" 24h
+  close_time String   // "HH:MM"
+
+  poi        Poi      @relation(fields: [poi_id], references: [id], onDelete: Cascade)
+
+  @@id([poi_id, day, open_time, close_time])
+  @@map("opening_hours")
+}
+
+// ---------- Planning / Routing ----------
 model Itinerary {
-  id                String   @id @default(uuid())
+  id                String    @id @default(uuid())
   user_id           String
-  user              User     @relation(fields: [user_id], references: [id])
+  user              User      @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
   title             String
   date              DateTime?
-  items             Json
+  share_token       String?   @unique
   total_distance_km Float?
   total_time_min    Int?
-  created_at        DateTime @default(now())
-  updated_at        DateTime @updatedAt
+  route_polyline    String?   // encoded polyline for map preview
+
+  items             ItineraryItem[]
+
+  created_at        DateTime  @default(now())
+  updated_at        DateTime  @updatedAt
 
   @@map("itineraries")
   @@index([user_id])
 }
 
+model ItineraryItem {
+  id              String    @id @default(uuid())
+  itinerary_id    String
+  itinerary       Itinerary @relation(fields: [itinerary_id], references: [id], onDelete: Cascade)
+
+  poi_id          String
+  poi             Poi       @relation(fields: [poi_id], references: [id])
+
+  order_index     Int       @default(0)
+  start_time      DateTime?
+  end_time        DateTime?
+  leg_distance_km Float?
+  leg_time_min    Int?
+  note            String?
+
+  @@map("itinerary_items")
+  @@index([itinerary_id])
+  @@index([poi_id])
+}
+
+// ---------- UGC / Signals ----------
 model Review {
   id         String   @id @default(uuid())
   user_id    String
@@ -73,22 +275,140 @@ model Review {
   rating     Int
   comment    String?
   created_at DateTime @default(now())
-  user       User     @relation(fields: [user_id], references: [id])
-  poi        Poi      @relation(fields: [poi_id], references: [id])
+
+  user       User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  poi        Poi      @relation(fields: [poi_id], references: [id], onDelete: Cascade)
 
   @@map("reviews")
   @@index([poi_id])
 }
 
 model Feedback {
-  id         String   @id @default(uuid())
+  id         String         @id @default(uuid())
   user_id    String
   poi_id     String
-  signal     String
-  created_at DateTime @default(now())
-  user       User     @relation(fields: [user_id], references: [id])
-  poi        Poi      @relation(fields: [poi_id], references: [id])
+  signal     FeedbackSignal
+  reason     String?
+  created_at DateTime       @default(now())
+
+  user       User           @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  poi        Poi            @relation(fields: [poi_id], references: [id], onDelete: Cascade)
 
   @@map("feedbacks")
   @@index([poi_id])
+}
+
+// ---------- Chat / Memory / Evaluation ----------
+model ChatSession {
+  id          String        @id @default(uuid())
+  user_id     String?
+  user        User?         @relation(fields: [user_id], references: [id], onDelete: SetNull)
+
+  title       String?
+  started_at  DateTime      @default(now())
+  updated_at  DateTime      @updatedAt
+
+  messages    ChatMessage[]
+  runs        AgentRun[]
+  memories    AgentMemory[]
+
+  @@map("chat_sessions")
+  @@index([user_id])
+}
+
+model ChatMessage {
+  id         String     @id @default(uuid())
+  session_id String
+  session    ChatSession @relation(fields: [session_id], references: [id], onDelete: Cascade)
+
+  sender     String      // "user" | "assistant" | "tool"
+  role       String?     // optional free-form
+  agent      AgentName?
+  content    String
+  metadata   Json?
+  created_at DateTime    @default(now())
+
+  @@map("chat_messages")
+  @@index([session_id])
+}
+
+model AgentRun {
+  id          String      @id @default(uuid())
+  session_id  String?
+  session     ChatSession? @relation(fields: [session_id], references: [id], onDelete: SetNull)
+
+  agent       AgentName
+  input       Json
+  output      Json?
+  tool_usage  Json?       // tokens, timing, costs, cache hits
+
+  evidences   AgentRunEvidence[]
+
+  created_at  DateTime    @default(now())
+
+  @@map("agent_runs")
+  @@index([session_id])
+}
+
+model AgentRunEvidence {
+  run_id String
+  poi_id String
+
+  run    AgentRun @relation(fields: [run_id], references: [id], onDelete: Cascade)
+  poi    Poi      @relation(fields: [poi_id], references: [id], onDelete: Cascade)
+
+  @@id([run_id, poi_id])
+  @@map("agent_run_evidence")
+}
+
+model AgentMemory {
+  id             String      @id @default(uuid())
+  user_id        String?
+  session_id     String?
+  scope          MemoryScope
+  agent          AgentName?
+  summary        String      // compact natural-language memory
+  json_payload   Json?       // structured memory (preferences, blacklist, etc.)
+  last_refreshed DateTime    @default(now())
+  expires_at     DateTime?
+
+  user    User?        @relation(fields: [user_id], references: [id], onDelete: SetNull)
+  session ChatSession? @relation(fields: [session_id], references: [id], onDelete: Cascade)
+
+  @@map("agent_memories")
+  @@index([user_id])
+  @@index([session_id])
+}
+
+model WeatherCache {
+  id         String   @id @default(uuid())
+  lat        Float
+  lon        Float
+  ts         DateTime
+  provider   String
+  payload    Json
+  created_at DateTime @default(now())
+
+  @@unique([lat, lon, ts, provider])
+  @@map("weather_cache")
+}
+
+// ---------- Static/Upload ----------
+model Media {
+  id           String  @id @default(uuid())
+  user_id      String?
+  poi_id       String?
+  url          String?
+  storage_path String
+  content_type String?
+  width        Int?
+  height       Int?
+  created_at   DateTime @default(now())
+
+  user         User?   @relation(fields: [user_id], references: [id], onDelete: SetNull)
+  poi          Poi?    @relation(fields: [poi_id], references: [id], onDelete: SetNull)
+
+  @@map("media")
+  @@index([poi_id])
+  @@index([user_id])
 }

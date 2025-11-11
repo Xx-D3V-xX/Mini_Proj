@@ -1,14 +1,12 @@
 import { Module } from '@nestjs/common';
-import { MulterModule } from '@nestjs/platform-express';
-import { memoryStorage } from 'multer';
-
 import { PrismaModule } from '../prisma/prisma.module';
 import { PoisController } from './pois.controller';
+import { PoiSearchController } from './search.controller';
 import { PoisService } from './pois.service';
 
 @Module({
-  imports: [PrismaModule, MulterModule.register({ storage: memoryStorage() })],
-  controllers: [PoisController],
+  imports: [PrismaModule],
+  controllers: [PoisController, PoiSearchController],
   providers: [PoisService],
   exports: [PoisService],
 })
