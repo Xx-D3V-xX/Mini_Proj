@@ -1,0 +1,13 @@
+=== E2E SUMMARY ===
+DB mode: system
+Backend PID: $(cat /Users/rachelfernandes/Desktop/AIML/Mini_Proj-main/Mini_Proj/artifacts/e2e/backend.pid)
+Frontend PID: $(cat /Users/rachelfernandes/Desktop/AIML/Mini_Proj-main/Mini_Proj/artifacts/e2e/frontend.pid)
+API search status: 0, feedback status: 0
+Artifacts:
+  /Users/rachelfernandes/Desktop/AIML/Mini_Proj-main/Mini_Proj/artifacts/e2e/backend.out.log
+  /Users/rachelfernandes/Desktop/AIML/Mini_Proj-main/Mini_Proj/artifacts/e2e/frontend.out.log
+  /Users/rachelfernandes/Desktop/AIML/Mini_Proj-main/Mini_Proj/artifacts/e2e/search.json
+  /Users/rachelfernandes/Desktop/AIML/Mini_Proj-main/Mini_Proj/artifacts/e2e/feedback.json
+  /Users/rachelfernandes/Desktop/AIML/Mini_Proj-main/Mini_Proj/artifacts/e2e/console.json (DevTools console logs)
+  /Users/rachelfernandes/Desktop/AIML/Mini_Proj-main/Mini_Proj/artifacts/e2e/playwright-report/index.html
+Playwright Tests: 2 passed

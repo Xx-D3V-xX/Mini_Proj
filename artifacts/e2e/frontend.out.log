@@ -1,0 +1,12 @@
+
+> mumbai-trails-frontend@1.0.0 dev /Users/rachelfernandes/Desktop/AIML/Mini_Proj-main/Mini_Proj/frontend
+> vite
+
+
+  VITE v7.2.2  ready in 785 ms
+
+  ➜  Local:   http://localhost:5173/
+  ➜  Network: use --host to expose
+
+A PostCSS plugin did not pass the `from` option to `postcss.parse`. This may cause imported assets to be incorrectly transformed. If you've recently added a PostCSS plugin that raised this warning, please contact the package author to fix the issue.
+ ELIFECYCLE  Command failed with exit code 143.
