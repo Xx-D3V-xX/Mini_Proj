@@ -20,6 +20,10 @@ coverage
 .env.local
 **/.env
 
+# Development
+.pids
+artifacts/*.log
+
 # OS
 .DS_Store
 Thumbs.db

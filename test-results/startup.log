@@ -1,0 +1,21 @@
+═══════════════════════════════════════════
+  MumbAI Trails - Dev Environment Startup  
+═══════════════════════════════════════════
+
+📋 Step 1: Checking ports availability...
+Checking ports: 4000 5173 8001
+✓ Port 4000 is available
+✓ Port 5173 is available
+✓ Port 8001 is available
+
+All ports are available!
+
+🤖 Step 2: Starting AI service stub (port 8001)...
+   AI stub started (PID: 40990)
+   Waiting for AI service health check...
+   ✓ AI service is ready
+
+🔧 Step 3: Starting backend (port 4000)...
+   Backend started (PID: 41013)
+   Waiting for backend health check...
+   ❌ Backend failed to start

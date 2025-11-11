@@ -14,34 +14,10 @@ import { TransformInterceptor } from './common/interceptors/transform.intercepto
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule, { bufferLogs: true });
   const configService = app.get(ConfigService);
-  const normalizeOrigin = (value: string) => value.replace(/\/+$/, '');
-  const originEnv = configService.get<string>('CORS_ORIGIN') ?? 'http://localhost:5173';
-  const allowedOrigins = originEnv
-    .split(/[,\s]+/)
-    .map((value) => normalizeOrigin(value.trim()))
-    .filter(Boolean);
-  const allowAllOrigins = allowedOrigins.includes('*');
 
   app.use(cookieParser());
   app.enableCors({
-    origin: (requestOrigin, callback) => {
-      const normalizedRequestOrigin = requestOrigin ? normalizeOrigin(requestOrigin) : undefined;
-
-      if (!requestOrigin && allowedOrigins.length === 1 && !allowAllOrigins) {
-        return callback(null, allowedOrigins[0]);
-      }
-
-      if (
-        allowAllOrigins ||
-        !normalizedRequestOrigin ||
-        allowedOrigins.some((origin) => origin === normalizedRequestOrigin)
-      ) {
-        const responseOrigin = requestOrigin ?? allowedOrigins[0];
-        return callback(null, responseOrigin);
-      }
-
-      return callback(new Error(`Origin ${requestOrigin} not allowed by CORS`));
-    },
+    origin: ['http://localhost:5173'],
     credentials: true,
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
     allowedHeaders: 'Content-Type, Authorization, X-Requested-With',

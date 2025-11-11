@@ -11,31 +11,12 @@ const exceptions_1 = require("./common/exceptions");
 const logging_interceptor_1 = require("./common/interceptors/logging.interceptor");
 const transform_interceptor_1 = require("./common/interceptors/transform.interceptor");
 async function bootstrap() {
-    var _a, _b;
+    var _a;
     const app = await core_1.NestFactory.create(app_module_1.AppModule, { bufferLogs: true });
     const configService = app.get(config_1.ConfigService);
-    const normalizeOrigin = (value) => value.replace(/\/+$/, '');
-    const originEnv = (_a = configService.get('CORS_ORIGIN')) !== null && _a !== void 0 ? _a : 'http://localhost:5173';
-    const allowedOrigins = originEnv
-        .split(/[,\s]+/)
-        .map((value) => normalizeOrigin(value.trim()))
-        .filter(Boolean);
-    const allowAllOrigins = allowedOrigins.includes('*');
     app.use(cookieParser());
     app.enableCors({
-        origin: (requestOrigin, callback) => {
-            const normalizedRequestOrigin = requestOrigin ? normalizeOrigin(requestOrigin) : undefined;
-            if (!requestOrigin && allowedOrigins.length === 1 && !allowAllOrigins) {
-                return callback(null, allowedOrigins[0]);
-            }
-            if (allowAllOrigins ||
-                !normalizedRequestOrigin ||
-                allowedOrigins.some((origin) => origin === normalizedRequestOrigin)) {
-                const responseOrigin = requestOrigin !== null && requestOrigin !== void 0 ? requestOrigin : allowedOrigins[0];
-                return callback(null, responseOrigin);
-            }
-            return callback(new Error(`Origin ${requestOrigin} not allowed by CORS`));
-        },
+        origin: ['http://localhost:5173'],
         credentials: true,
         methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
         allowedHeaders: 'Content-Type, Authorization, X-Requested-With',
@@ -54,7 +35,7 @@ async function bootstrap() {
         .build();
     const document = swagger_1.SwaggerModule.createDocument(app, swaggerConfig);
     swagger_1.SwaggerModule.setup('docs', app, document);
-    const port = (_b = configService.get('PORT')) !== null && _b !== void 0 ? _b : 4000;
+    const port = (_a = configService.get('PORT')) !== null && _a !== void 0 ? _a : 4000;
     await app.listen(port);
 }
 bootstrap();
