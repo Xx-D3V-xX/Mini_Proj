@@ -9,6 +9,8 @@ yarn-error.log*
 __pycache__
 *.py[cod]
 *.egg-info
+/ai-models/.venv
+/ai-models/.venv/*
 
 # Builds
 /dist

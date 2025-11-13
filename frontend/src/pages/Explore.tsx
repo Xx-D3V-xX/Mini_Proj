@@ -38,12 +38,19 @@ const RATING_OPTIONS = [
   { label: "4.5★ & up", value: "4.5" },
 ];
 
+const PRICE_OPTIONS = [
+  { label: "Any Budget", value: "3" },
+  { label: "Free", value: "0" },
+  { label: "Budget ($)", value: "1" },
+  { label: "Mid-range ($$)", value: "2" },
+];
+
 const MOOD_OPTIONS = [
-  { label: "Cultural immersion", value: "culture", tag: "landmark" },
-  { label: "Foodie crawl", value: "foodie", tag: "food" },
-  { label: "Sunset & sea", value: "coastal", tag: "outdoors" },
-  { label: "Family day out", value: "family", tag: "park" },
-  { label: "Spiritual reset", value: "spiritual", tag: "temple" },
+  { label: "Cultural immersion", value: "culture", tag: "heritage" },
+  { label: "Foodie crawl", value: "foodie", tag: "streetfood" },
+  { label: "Sunset & sea", value: "coastal", tag: "sunset" },
+  { label: "Family day out", value: "family", tag: "family" },
+  { label: "Spiritual reset", value: "spiritual", tag: "culture" },
 ];
 
 export default function Explore() {
@@ -120,7 +127,7 @@ export default function Explore() {
                   ))}
                 </SelectContent>
               </Select>
-              <Select value={priceLevel} onValueChange={setPriceLevel}>
+              <Select value={String(maxPrice)} onValueChange={(val) => setMaxPrice(Number(val))}>
                 <SelectTrigger className="w-full" data-testid="select-budget">
                   <SelectValue placeholder="Budget" />
                 </SelectTrigger>

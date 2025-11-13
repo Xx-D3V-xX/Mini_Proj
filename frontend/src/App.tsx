@@ -13,6 +13,7 @@ import Explore from "@/pages/Explore";
 import Profile from "@/pages/Profile";
 import ItineraryGenerator from "@/pages/ItineraryGenerator";
 import Chat from "@/pages/Chat";
+import Admin from "@/pages/Admin";
 import NotFound from "@/pages/not-found";
 
 function AppContent() {
@@ -45,6 +46,11 @@ function AppContent() {
         </Route>
         <Route path="/chat">
           <Chat />
+        </Route>
+        <Route path="/admin">
+          <ProtectedRoute>
+            <Admin />
+          </ProtectedRoute>
         </Route>
         <Route component={NotFound} />
       </Switch>

@@ -1,0 +1,55 @@
+
+> mumbai-trails-backend@1.0.0 start
+> nest start
+
+(node:34660) [DEP0190] DeprecationWarning: Passing args to a child process with shell option true can lead to security vulnerabilities, as the arguments are not escaped, only concatenated.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+[32m[Nest] 34677  - [39m11/13/2025, 1:50:10 PM [32m    LOG[39m [38;5;3m[NestFactory] [39m[32mStarting Nest application...[39m
+[32m[Nest] 34677  - [39m11/13/2025, 1:50:10 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mAppModule dependencies initialized[39m[38;5;3m +1ms[39m
+[32m[Nest] 34677  - [39m11/13/2025, 1:50:10 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mPrismaModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 34677  - [39m11/13/2025, 1:50:10 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mPassportModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 34677  - [39m11/13/2025, 1:50:10 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mMulterModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 34677  - [39m11/13/2025, 1:50:10 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mMulterModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 34677  - [39m11/13/2025, 1:50:10 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mConfigHostModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 34677  - [39m11/13/2025, 1:50:10 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mConfigModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 34677  - [39m11/13/2025, 1:50:10 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mConfigModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 34677  - [39m11/13/2025, 1:50:10 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mAppConfigModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 34677  - [39m11/13/2025, 1:50:10 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mJwtModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 34677  - [39m11/13/2025, 1:50:10 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mUploadsModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 34677  - [39m11/13/2025, 1:50:10 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mUsersModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 34677  - [39m11/13/2025, 1:50:10 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mAnalyticsModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 34677  - [39m11/13/2025, 1:50:10 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mIntegrationsModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 34677  - [39m11/13/2025, 1:50:10 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mPoisModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 34677  - [39m11/13/2025, 1:50:10 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mAuthModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 34677  - [39m11/13/2025, 1:50:10 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mItinerariesModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 34677  - [39m11/13/2025, 1:50:10 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mAuthController {/auth}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 34677  - [39m11/13/2025, 1:50:10 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/auth/signup, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 34677  - [39m11/13/2025, 1:50:10 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/auth/login, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 34677  - [39m11/13/2025, 1:50:10 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/auth/refresh, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 34677  - [39m11/13/2025, 1:50:10 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/auth/logout, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 34677  - [39m11/13/2025, 1:50:10 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mUsersController {/users}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 34677  - [39m11/13/2025, 1:50:10 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/users/me, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 34677  - [39m11/13/2025, 1:50:10 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/users/me/preferences, PATCH} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 34677  - [39m11/13/2025, 1:50:10 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mPoisController {/pois}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 34677  - [39m11/13/2025, 1:50:10 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/pois, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 34677  - [39m11/13/2025, 1:50:10 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/pois/:id, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 34677  - [39m11/13/2025, 1:50:10 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/pois, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 34677  - [39m11/13/2025, 1:50:10 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/pois/:id, PUT} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 34677  - [39m11/13/2025, 1:50:10 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/pois/:id, DELETE} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 34677  - [39m11/13/2025, 1:50:10 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/pois/import/csv, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 34677  - [39m11/13/2025, 1:50:10 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mItinerariesController {/itineraries}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 34677  - [39m11/13/2025, 1:50:10 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/itineraries/generate, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 34677  - [39m11/13/2025, 1:50:10 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/itineraries, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 34677  - [39m11/13/2025, 1:50:10 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/itineraries/:id, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 34677  - [39m11/13/2025, 1:50:10 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mIntegrationsController {/integrations}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 34677  - [39m11/13/2025, 1:50:10 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/integrations/recommend, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 34677  - [39m11/13/2025, 1:50:10 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/integrations/chat, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 34677  - [39m11/13/2025, 1:50:10 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/integrations/travel-time, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 34677  - [39m11/13/2025, 1:50:10 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/integrations/weather, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 34677  - [39m11/13/2025, 1:50:10 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mUploadsController {/uploads}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 34677  - [39m11/13/2025, 1:50:10 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/uploads/image, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 34677  - [39m11/13/2025, 1:50:10 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mAnalyticsController {/analytics}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 34677  - [39m11/13/2025, 1:50:10 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/analytics/overview, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 34677  - [39m11/13/2025, 1:50:10 PM [32m    LOG[39m [38;5;3m[NestApplication] [39m[32mNest application successfully started[39m[38;5;3m +0ms[39m
+[32m[Nest] 34677  - [39m11/13/2025, 2:14:01 PM [32m    LOG[39m [38;5;3m[LoggingInterceptor] [39m[32mPOST /auth/login 125ms[39m
+[32m[Nest] 34677  - [39m11/13/2025, 2:16:24 PM [32m    LOG[39m [38;5;3m[LoggingInterceptor] [39m[32mGET /pois?limit=5 62ms[39m

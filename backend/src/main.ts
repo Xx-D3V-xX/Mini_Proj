@@ -24,7 +24,9 @@ async function bootstrap() {
     optionsSuccessStatus: 204,
   });
 
-  app.setGlobalPrefix('api');
+  app.setGlobalPrefix('api', {
+    exclude: ['docs', 'docs/(.*)'],
+  });
   app.useGlobalFilters(new HttpExceptionFilter());
   app.useGlobalPipes(new ValidationPipe({ transform: true }));
   app.useGlobalInterceptors(new LoggingInterceptor(), new TransformInterceptor());

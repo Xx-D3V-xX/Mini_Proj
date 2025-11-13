@@ -22,7 +22,9 @@ async function bootstrap() {
         allowedHeaders: 'Content-Type, Authorization, X-Requested-With',
         optionsSuccessStatus: 204,
     });
-    app.setGlobalPrefix('api');
+    app.setGlobalPrefix('api', {
+        exclude: ['docs', 'docs/(.*)'],
+    });
     app.useGlobalFilters(new exceptions_1.HttpExceptionFilter());
     app.useGlobalPipes(new common_1.ValidationPipe({ transform: true }));
     app.useGlobalInterceptors(new logging_interceptor_1.LoggingInterceptor(), new transform_interceptor_1.TransformInterceptor());
