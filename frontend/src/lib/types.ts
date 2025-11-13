@@ -56,12 +56,15 @@ export interface SearchResult {
   price_level?: number | null;
   distance_km?: number | null;
   open_now?: boolean;
+  image_url?: string | null;
 }
 
 export interface ItineraryItem {
   poi_id: string;
+  name?: string; // optional for Profile rendering
   start_time: string | null;
   end_time: string | null;
+  distance_km?: number | null; // convenience alias for leg_distance_km
   leg_distance_km?: number | null;
   leg_time_min?: number | null;
   note?: string | null;
@@ -74,6 +77,8 @@ export interface Itinerary {
   total_distance_km?: number;
   total_time_min?: number;
   date?: string | null;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface TravelHistoryEntry {

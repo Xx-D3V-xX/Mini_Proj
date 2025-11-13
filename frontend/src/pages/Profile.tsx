@@ -12,7 +12,8 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/lib/AuthContext";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, getQueryFn } from "@/lib/queryClient";
+import { exportItineraryToPdf } from "@/lib/itineraryExport";
 import type { Itinerary, TravelHistoryEntry } from "@/lib/types";
 
 export default function Profile() {
@@ -23,7 +24,8 @@ export default function Profile() {
     isError,
   } = useQuery<Itinerary[]>({
     queryKey: ["/itineraries"],
-    queryFn: () => apiRequest<Itinerary[]>("GET", "/itineraries"),
+    queryFn: getQueryFn<Itinerary[]>({ on401: "returnNull" }),
+    enabled: !!user,
   });
 
   const history = useMemo<TravelHistoryEntry[]>(() => {
@@ -49,10 +51,22 @@ export default function Profile() {
     return Array.from(visits.values());
   }, [itineraries]);
 
-  if (!user) {
+  if (isLoading) {
     return (
       <div className="container mx-auto px-4 py-8">
         <LoadingState />
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <EmptyState
+          title="You're not signed in"
+          description="Log in to view your saved itineraries and travel history."
+          icon="user"
+        />
       </div>
     );
   }
@@ -149,16 +163,24 @@ export default function Profile() {
                           {format(new Date(itinerary.created_at ?? Date.now()), "dd MMM yyyy")}
                         </p>
                       </div>
-                      <div className="flex gap-2 text-sm text-muted-foreground">
-                        {itinerary.total_distance_km && (
-                          <Badge variant="secondary">
-                            {itinerary.total_distance_km.toFixed(1)} km
-                          </Badge>
-                        )}
-                        {itinerary.total_time_min && (
-                          <Badge variant="secondary">{itinerary.total_time_min} min</Badge>
-                        )}
-                      </div>
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground flex-wrap">
+                      {itinerary.total_distance_km && (
+                        <Badge variant="secondary">
+                          {itinerary.total_distance_km.toFixed(1)} km
+                        </Badge>
+                      )}
+                      {itinerary.total_time_min && (
+                        <Badge variant="secondary">{itinerary.total_time_min} min</Badge>
+                      )}
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        onClick={() => exportItineraryToPdf(itinerary)}
+                      >
+                        Export PDF
+                      </Button>
+                    </div>
                     </div>
                     <p className="text-sm text-muted-foreground">
                       {itinerary.items.length} stops scheduled · next up:{" "}

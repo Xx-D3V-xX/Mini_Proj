@@ -6,6 +6,19 @@ import { randomUUID } from 'crypto';
 import { PrismaService } from '../prisma/prisma.service';
 import { SearchPoiDto } from './dto/query-poi.dto';
 
+export type AdminPoiDto = {
+  name: string;
+  category: string;
+  description: string;
+  latitude: number;
+  longitude: number;
+  price_level?: number | null;
+  rating?: number | null;
+  opening_hours?: string | null;
+  tags?: string[];
+  image_url?: string | null;
+};
+
 @Injectable()
 export class PoisService {
   constructor(private readonly prisma: PrismaService) {}
@@ -137,10 +150,173 @@ export class PoisService {
         price_level: poi.price_level,
         distance_km,
         open_now,
+        image_url: poi.image_url,
       };
     });
 
     return { results };
+  }
+
+  async listPublic(limit = 100) {
+    const pois = await this.prisma.poi.findMany({
+      orderBy: { rating: 'desc' },
+      take: limit,
+    });
+    return pois.map((poi) => ({
+      id: poi.id,
+      name: poi.name,
+      description: poi.description,
+      latitude: poi.latitude,
+      longitude: poi.longitude,
+      rating: poi.rating,
+      price_level: poi.price_level,
+      image_url: poi.image_url,
+    }));
+  }
+
+  async createFromAdmin(dto: AdminPoiDto) {
+    const existingSlugs = new Set(
+      (await this.prisma.poi.findMany({ select: { slug: true } })).map((poi) => poi.slug),
+    );
+    const row: ImportRow = {
+      id: undefined,
+      name: dto.name,
+      description: dto.description,
+      address: '',
+      locality: '',
+      city: 'Mumbai',
+      latitude: String(dto.latitude),
+      longitude: String(dto.longitude),
+      rating: dto.rating != null ? String(dto.rating) : undefined,
+      price_level: dto.price_level != null ? String(dto.price_level) : undefined,
+      ticket_price_inr: undefined,
+      best_time_of_day: undefined,
+      indoor_outdoor: undefined,
+      time_spent_min: undefined,
+      website_url: dto.image_url ?? undefined,
+      phone: undefined,
+      image_url: dto.image_url ?? undefined,
+      slug: undefined,
+      tags: dto.tags?.join('|'),
+      category: dto.category,
+      opening_hours: dto.opening_hours ?? undefined,
+      created_at: undefined,
+      updated_at: undefined,
+    };
+    const normalized = this.normalizeRow(row, existingSlugs);
+    const categoryCache = new Map<string, string>();
+    const tagCache = new Map<string, string>();
+
+    const poi = await this.prisma.$transaction(async (tx) => {
+      const { category, tags, opening_hours, created_at, updated_at, id: poiId, ...poiData } = normalized;
+      const createData = { ...poiData, id: poiId, created_at, updated_at };
+      const updateData = { ...poiData, updated_at: new Date() };
+      const created = await tx.poi.upsert({
+        where: { id: poiId },
+        update: updateData,
+        create: createData,
+      });
+
+      await tx.openingHour.deleteMany({ where: { poi_id: created.id } });
+      await tx.poiCategory.deleteMany({ where: { poi_id: created.id } });
+      await tx.poiTag.deleteMany({ where: { poi_id: created.id } });
+
+      if (category) {
+        const categoryId = await this.ensureCategory(tx, category, categoryCache);
+        await tx.poiCategory.create({ data: { poi_id: created.id, category_id: categoryId } });
+      }
+      for (const tagName of tags) {
+        const tagId = await this.ensureTag(tx, tagName, tagCache);
+        await tx.poiTag.create({ data: { poi_id: created.id, tag_id: tagId } });
+      }
+      for (const hour of opening_hours) {
+        await tx.openingHour.create({ data: { ...hour, poi_id: created.id } });
+      }
+
+      return created;
+    });
+
+    return this.getPoiDetails(poi.id);
+  }
+
+  async updateFromAdmin(id: string, dto: AdminPoiDto) {
+    const existing = await this.prisma.poi.findUnique({ where: { id } });
+    if (!existing) {
+      throw new NotFoundException('POI not found');
+    }
+    const existingSlugs = new Set(
+      (await this.prisma.poi.findMany({ select: { slug: true } })).map((poi) => poi.slug),
+    );
+    existingSlugs.delete(existing.slug);
+
+    const row: ImportRow = {
+      id,
+      name: dto.name,
+      description: dto.description,
+      address: '',
+      locality: '',
+      city: 'Mumbai',
+      latitude: String(dto.latitude),
+      longitude: String(dto.longitude),
+      rating: dto.rating != null ? String(dto.rating) : undefined,
+      price_level: dto.price_level != null ? String(dto.price_level) : undefined,
+      ticket_price_inr: undefined,
+      best_time_of_day: undefined,
+      indoor_outdoor: undefined,
+      time_spent_min: undefined,
+      website_url: dto.image_url ?? undefined,
+      phone: undefined,
+      image_url: dto.image_url ?? undefined,
+      slug: existing.slug,
+      tags: dto.tags?.join('|'),
+      category: dto.category,
+      opening_hours: dto.opening_hours ?? undefined,
+      created_at: existing.created_at.toISOString(),
+      updated_at: undefined,
+    };
+    const normalized = this.normalizeRow(row, existingSlugs);
+    const categoryCache = new Map<string, string>();
+    const tagCache = new Map<string, string>();
+
+    const poi = await this.prisma.$transaction(async (tx) => {
+      const { category, tags, opening_hours, created_at, updated_at, id: poiId, ...poiData } = normalized;
+      const createData = { ...poiData, id: poiId, created_at, updated_at };
+      const updateData = { ...poiData, updated_at: new Date() };
+      const updated = await tx.poi.upsert({
+        where: { id: poiId },
+        update: updateData,
+        create: createData,
+      });
+
+      await tx.openingHour.deleteMany({ where: { poi_id: updated.id } });
+      await tx.poiCategory.deleteMany({ where: { poi_id: updated.id } });
+      await tx.poiTag.deleteMany({ where: { poi_id: updated.id } });
+
+      if (category) {
+        const categoryId = await this.ensureCategory(tx, category, categoryCache);
+        await tx.poiCategory.create({ data: { poi_id: updated.id, category_id: categoryId } });
+      }
+      for (const tagName of tags) {
+        const tagId = await this.ensureTag(tx, tagName, tagCache);
+        await tx.poiTag.create({ data: { poi_id: updated.id, tag_id: tagId } });
+      }
+      for (const hour of opening_hours) {
+        await tx.openingHour.create({ data: { ...hour, poi_id: updated.id } });
+      }
+
+      return updated;
+    });
+
+    return this.getPoiDetails(poi.id);
+  }
+
+  async deletePoi(id: string) {
+    const existing = await this.prisma.poi.findUnique({ where: { id } });
+    if (!existing) {
+      throw new NotFoundException('POI not found');
+    }
+    await this.prisma.poi.delete({ where: { id } });
+    return { success: true };
   }
 
   async importCsv(buffer: Buffer) {

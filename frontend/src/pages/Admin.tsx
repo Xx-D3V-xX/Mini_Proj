@@ -15,7 +15,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:4000/api";
 
 interface POI {
-  id: number;
+  id: string;
   name: string;
   category: string;
   description: string;
@@ -60,7 +60,7 @@ export default function Admin() {
   const { data: analytics, isLoading: analyticsLoading } = useQuery<Analytics>({
     queryKey: ["analytics"],
     queryFn: async () => {
-      const res = await fetch(`${API_BASE}/analytics`, {
+      const res = await fetch(`${API_BASE}/analytics/overview`, {
         credentials: "include",
       });
       if (!res.ok) throw new Error("Failed to fetch analytics");
@@ -71,7 +71,7 @@ export default function Admin() {
   // Add POI mutation
   const addPOIMutation = useMutation({
     mutationFn: async (data: Partial<POI>) => {
-      const res = await fetch(`${API_BASE}/admin/pois`, {
+      const res = await fetch(`${API_BASE}/pois`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -92,8 +92,8 @@ export default function Admin() {
 
   // Update POI mutation
   const updatePOIMutation = useMutation({
-    mutationFn: async ({ id, data }: { id: number; data: Partial<POI> }) => {
-      const res = await fetch(`${API_BASE}/admin/pois/${id}`, {
+    mutationFn: async ({ id, data }: { id: string; data: Partial<POI> }) => {
+      const res = await fetch(`${API_BASE}/pois/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -114,8 +114,8 @@ export default function Admin() {
 
   // Delete POI mutation
   const deletePOIMutation = useMutation({
-    mutationFn: async (id: number) => {
-      const res = await fetch(`${API_BASE}/admin/pois/${id}`, {
+    mutationFn: async (id: string) => {
+      const res = await fetch(`${API_BASE}/pois/${id}`, {
         method: "DELETE",
         credentials: "include",
       });
@@ -136,7 +136,7 @@ export default function Admin() {
     mutationFn: async (file: File) => {
       const formData = new FormData();
       formData.append("file", file);
-      const res = await fetch(`${API_BASE}/admin/pois/import`, {
+      const res = await fetch(`${API_BASE}/admin/import`, {
         method: "POST",
         credentials: "include",
         body: formData,

@@ -17,13 +17,57 @@ const common_1 = require("@nestjs/common");
 const swagger_1 = require("@nestjs/swagger");
 const ai_client_service_1 = require("./ai-client.service");
 const weather_client_service_1 = require("./weather-client.service");
+const prisma_service_1 = require("../prisma/prisma.service");
 let IntegrationsController = class IntegrationsController {
-    constructor(aiClient, weatherClient) {
+    constructor(aiClient, weatherClient, prisma) {
         this.aiClient = aiClient;
         this.weatherClient = weatherClient;
+        this.prisma = prisma;
     }
-    recommend(payload) {
-        return this.aiClient.recommend(payload);
+    async recommend(payload) {
+        try {
+            return await this.aiClient.recommend(payload);
+        }
+        catch (err) {
+            const mood = ((payload === null || payload === void 0 ? void 0 : payload.mood) || '').toString().toLowerCase();
+            const moodTagMap = {
+                chill: ['sunset', 'seaside', 'cafe', 'family'],
+                foodie: ['food', 'dessert', 'street-food'],
+                adventure: ['outdoor', 'trek', 'viewpoint'],
+                romantic: ['sunset', 'seaside', 'viewpoint'],
+                family: ['family', 'museum', 'park'],
+            };
+            const tags = moodTagMap[mood] || [];
+            const where = tags.length
+                ? { tag_links: { some: { tag: { slug: { in: tags } } } } }
+                : {};
+            const pois = await this.prisma.poi.findMany({
+                where,
+                orderBy: { rating: 'desc' },
+                take: 10,
+                select: { id: true, name: true, latitude: true, longitude: true, rating: true, price_level: true },
+            });
+            const finalPois = pois.length
+                ? pois
+                : await this.prisma.poi.findMany({
+                    orderBy: { rating: 'desc' },
+                    take: 10,
+                    select: { id: true, name: true, latitude: true, longitude: true, rating: true, price_level: true },
+                });
+            return {
+                pois: finalPois.map((p) => {
+                    var _a, _b;
+                    return ({
+                        id: p.id,
+                        name: p.name,
+                        lat: p.latitude,
+                        lon: p.longitude,
+                        rating: (_a = p.rating) !== null && _a !== void 0 ? _a : 0,
+                        price_level: (_b = p.price_level) !== null && _b !== void 0 ? _b : 0,
+                    });
+                }),
+            };
+        }
     }
     chat(payload) {
         return this.aiClient.chat(payload);
@@ -41,7 +85,7 @@ __decorate([
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),
-    __metadata("design:returntype", void 0)
+    __metadata("design:returntype", Promise)
 ], IntegrationsController.prototype, "recommend", null);
 __decorate([
     (0, common_1.Post)('chat'),
@@ -67,6 +111,7 @@ exports.IntegrationsController = IntegrationsController = __decorate([
     (0, swagger_1.ApiTags)('integrations'),
     (0, common_1.Controller)('integrations'),
     __metadata("design:paramtypes", [ai_client_service_1.AiClientService,
-        weather_client_service_1.WeatherClientService])
+        weather_client_service_1.WeatherClientService,
+        prisma_service_1.PrismaService])
 ], IntegrationsController);
 //# sourceMappingURL=integrations.controller.js.map

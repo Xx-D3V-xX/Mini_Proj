@@ -13,6 +13,7 @@ export declare class PoiSearchController {
             price_level: number;
             distance_km: number;
             open_now: boolean;
+            image_url: string;
         }[];
     }>;
 }
