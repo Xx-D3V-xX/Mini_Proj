@@ -1,0 +1,20 @@
+{
+  "name": "mumbai-trails-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "MumbAI Trails - Discover Mumbai with AI-powered itineraries",
+  "scripts": {
+    "dev:start": "bash ./scripts/dev-start.sh",
+    "dev:stop": "bash ./scripts/dev-stop.sh",
+    "test:backend": "cd backend && pnpm test",
+    "test:frontend": "cd frontend && pnpm test",
+    "test:e2e": "cd tests/e2e && npm test",
+    "test:api-probes": "bash ./scripts/api-probes.sh",
+    "test:all": "pnpm run test:backend && pnpm run test:frontend && pnpm run test:e2e",
+    "test:run-all": "bash ./scripts/run-all-tests.sh",
+    "lint:backend": "cd backend && pnpm run lint",
+    "lint:frontend": "cd frontend && pnpm run lint || echo 'Frontend lint not configured'",
+    "install:all": "pnpm install --frozen-lockfile=false || (cd backend && pnpm install) && (cd frontend && pnpm install) && (cd tests/e2e && npm install)"
+  },
+  "packageManager": "pnpm@10.21.0"
+}

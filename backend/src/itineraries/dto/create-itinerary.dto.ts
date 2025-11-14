@@ -1,7 +1,8 @@
 import { z } from 'zod';
 
 const itineraryItemSchema = z.object({
-  poi_id: z.string().uuid(),
+  // Accept string IDs because POIs use human-friendly slug IDs in this build.
+  poi_id: z.string().min(1),
   start_time: z.string().optional(),
   end_time: z.string().optional(),
   note: z.string().max(240).optional(),

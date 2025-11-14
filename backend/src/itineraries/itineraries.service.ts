@@ -27,7 +27,7 @@ export class ItinerariesService {
     const poiIds = dto.items.map((item) => item.poi_id);
     const pois = await this.prisma.poi.findMany({
       where: { id: { in: poiIds } },
-      select: { id: true, latitude: true, longitude: true },
+      select: { id: true, name: true, latitude: true, longitude: true },
     });
     const poiMap = new Map(pois.map((poi) => [poi.id, poi]));
     for (const poiId of poiIds) {
@@ -61,10 +61,27 @@ export class ItinerariesService {
           })),
         },
       },
-      select: { id: true, share_token: true },
+      include: {
+        items: true,
+      },
     });
 
-    return created;
+    // Shape response for frontend expectations
+    return {
+      id: created.id,
+      title: created.title,
+      date: created.date,
+      total_distance_km: created.total_distance_km ?? Number(totalDistance.toFixed(2)),
+      total_time_min: created.total_time_min ?? Math.round(totalTime),
+      items: created.items.map((it) => ({
+        poi_id: it.poi_id,
+        start_time: it.start_time,
+        end_time: it.end_time,
+        leg_distance_km: it.leg_distance_km,
+        leg_time_min: it.leg_time_min,
+        note: it.note,
+      })),
+    };
   }
 
   async get(id: string) {
@@ -73,14 +90,7 @@ export class ItinerariesService {
       include: {
         items: {
           orderBy: { order_index: 'asc' },
-          select: {
-            poi_id: true,
-            start_time: true,
-            end_time: true,
-            leg_distance_km: true,
-            leg_time_min: true,
-            note: true,
-          },
+          include: { poi: { select: { name: true } } },
         },
       },
     });
@@ -91,8 +101,53 @@ export class ItinerariesService {
       id: itinerary.id,
       title: itinerary.title,
       date: itinerary.date,
-      items: itinerary.items,
+      created_at: (itinerary as any).created_at ?? undefined,
+      updated_at: (itinerary as any).updated_at ?? undefined,
+      total_distance_km: itinerary.total_distance_km ?? undefined,
+      total_time_min: itinerary.total_time_min ?? undefined,
+      items: itinerary.items.map((it) => ({
+        poi_id: it.poi_id,
+        name: it.poi?.name,
+        start_time: it.start_time,
+        end_time: it.end_time,
+        distance_km: it.leg_distance_km,
+        leg_distance_km: it.leg_distance_km,
+        leg_time_min: it.leg_time_min,
+        note: it.note,
+      })),
     };
+  }
+
+  async list(userId: string) {
+    const itineraries = await this.prisma.itinerary.findMany({
+      where: { user_id: userId },
+      orderBy: { created_at: 'desc' },
+      include: {
+        items: {
+          orderBy: { order_index: 'asc' },
+          include: { poi: { select: { name: true } } },
+        },
+      },
+    });
+    return itineraries.map((it) => ({
+      id: it.id,
+      title: it.title,
+      date: it.date,
+      created_at: (it as any).created_at ?? undefined,
+      updated_at: (it as any).updated_at ?? undefined,
+      total_distance_km: it.total_distance_km ?? undefined,
+      total_time_min: it.total_time_min ?? undefined,
+      items: it.items.map((item) => ({
+        poi_id: item.poi_id,
+        name: item.poi?.name,
+        start_time: item.start_time,
+        end_time: item.end_time,
+        distance_km: item.leg_distance_km,
+        leg_distance_km: item.leg_distance_km,
+        leg_time_min: item.leg_time_min,
+        note: item.note,
+      })),
+    }));
   }
 
   private buildItineraryItems(

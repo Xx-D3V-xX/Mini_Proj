@@ -1,0 +1,1 @@
+{"version":3,"file":"update-preferences.dto.js","sourceRoot":"","sources":["../../../../src/users/dto/update-preferences.dto.ts"],"names":[],"mappings":";;;AAAA,6BAAwB;AAEX,QAAA,uBAAuB,GAAG,OAAC,CAAC,MAAM,CAAC;IAC9C,WAAW,EAAE,OAAC,CAAC,MAAM,CAAC,OAAC,CAAC,MAAM,EAAE,EAAE,OAAC,CAAC,GAAG,EAAE,CAAC,CAAC,QAAQ,EAAE;CACtD,CAAC,CAAC"}

@@ -6,7 +6,7 @@
   5) ItineraryView: open QR route → verify map polyline and totals
   6) Admin: login as admin → Import CSV → add/edit/delete POI → see analytics cards
   7) Chatbot: “family-friendly places near Bandra” → shows suggestions + reasons
-  8) Swagger: http://localhost:4000/docs → try GET /pois and POST /itineraries/generate
+  8) Swagger: http://localhost:4000/docs → try GET /api/pois and POST /api/itineraries
 - Acceptance checklist (tick boxes):
   [ ] Landing recs render
   [ ] Explore filters + map OK
@@ -17,5 +17,6 @@
   [ ] Swagger reachable
   [ ] start-all works
 - curl smoke tests (after login token):
-  curl -s http://localhost:4000/pois | head
+  curl -s http://localhost:4000/api/pois | head
+  curl -s http://localhost:4000/api/search?q=museum
   curl -s http://localhost:8001/health

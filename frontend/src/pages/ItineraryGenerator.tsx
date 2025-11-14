@@ -22,6 +22,7 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { generateItinerarySchema, type GenerateItineraryInput } from "@/lib/schemas";
 import type { Itinerary, SearchResult } from "@/lib/types";
+import { exportItineraryToPdf } from "@/lib/itineraryExport";
 
 const MOODS = [
   { label: "Culture & heritage", value: "culture" },
@@ -65,6 +66,9 @@ export default function ItineraryGenerator() {
         mode: "MIXED",
         items: selected.map((poi_id) => ({ poi_id })),
       };
+      // Use the authenticated endpoint so generated plans are tied to the
+      // logged-in user and show up in their profile history. The backend also
+      // exposes /itineraries/generate for unauthenticated API/http use.
       return apiRequest<Itinerary>("POST", "/itineraries", requestBody);
     },
     onSuccess: (result) => {
@@ -231,14 +235,24 @@ export default function ItineraryGenerator() {
             {itinerary ? (
               <div className="space-y-6">
                 <div className="border rounded-2xl p-6 bg-card">
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between gap-4 flex-wrap">
                     <div>
                       <p className="text-sm uppercase tracking-wide text-muted-foreground">Your custom trail</p>
                       <h2 className="font-serif text-3xl font-bold">{itinerary.title}</h2>
                     </div>
-                    <div className="text-sm text-muted-foreground space-y-1 text-right">
-                      <p>Total distance: {itinerary.total_distance_km?.toFixed(1) ?? "—"} km</p>
-                      <p>Total travel time: {itinerary.total_time_min ?? "—"} min</p>
+                    <div className="flex flex-col items-end gap-2 text-sm text-muted-foreground">
+                      <div className="space-y-1 text-right">
+                        <p>Total distance: {itinerary.total_distance_km?.toFixed(1) ?? "—"} km</p>
+                        <p>Total travel time: {itinerary.total_time_min ?? "—"} min</p>
+                      </div>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        onClick={() => exportItineraryToPdf(itinerary)}
+                      >
+                        Export as PDF
+                      </Button>
                     </div>
                   </div>
                 </div>

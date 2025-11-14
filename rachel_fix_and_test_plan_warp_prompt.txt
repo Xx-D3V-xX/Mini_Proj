@@ -1,0 +1,245 @@
+
+ONE‑SHOT WARP PROMPT
+Project: Mini_Proj (branch: rachel)
+Purpose: Fix current errors using best‑practice solutions (no port/process conflicts), then implement a complete, gap‑free testing strategy (unit, integration, e2e, non‑functional). Apply changes locally only (no Docker, no cloud). Produce reproducible scripts and artifacts.
+
+============================================================
+0) OPERATING PRINCIPLES (READ CAREFULLY)
+============================================================
+- Work on the current “rachel” branch in the existing workspace.
+- DO NOT introduce Docker, cloud services, or CI. Everything must run locally on macOS/Linux.
+- Enforce single package manager across the repo (prefer pnpm if pnpm-lock.yaml exists, else npm if package-lock.json exists, else yarn).
+- Standard service ports (fail if busy; do not auto‑change):
+  FRONTEND=5173, BACKEND=4000, AI_SERVICE=8001
+- Treat any HTTP 4xx/5xx from expected routes as failures (use curl -f in probes).
+- All test and runtime artifacts must land under artifacts/ with deterministic names.
+- Only change files explicitly mentioned below OR when the instruction says “scan & fix”.
+
+At the end, output:
+- A summary of edits (file → change).
+- Commands to start/stop services and to run the full test suite.
+- Paths of produced artifacts.
+
+============================================================
+1) FIXES — ENV, ROUTING, CORS, INVALID DOM NESTING
+============================================================
+
+1.1 FRONTEND ENV NORMALIZATION
+- File: frontend/.env.example  (and create frontend/.env for local dev if missing)
+  Set/ensure:
+    VITE_API_BASE=http://localhost:4000/api
+    VITE_MAP_TILE_URL=https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png   # if not set; add TODO for attribution
+- Verify all API calls use import.meta.env.VITE_API_BASE (no hardcoded URLs).
+
+1.2 BACKEND GLOBAL PREFIX & CORS (Nest)
+- File: backend/src/main.ts
+  Ensure global API prefix remains:
+    app.setGlobalPrefix('api')
+  Replace/ensure CORS is static, credential‑friendly, and minimal surprise:
+    app.enableCors({
+      origin: ['http://localhost:5173'],
+      credentials: true,
+      methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+      allowedHeaders: 'Content-Type, Authorization, X-Requested-With',
+      optionsSuccessStatus: 204,
+    });
+- Keep Swagger at http://localhost:4000/docs (unchanged).
+
+1.3 DOCS & SAMPLE ENDPOINTS (ALIGN WITH BACKEND)
+- File: API.http
+  Add at top:
+    @base=http://localhost:4000/api
+  Correct examples:
+    # Search/list POIs
+    GET {{base}}/search?q=museum&limit=10
+    # POI details
+    GET {{base}}/pois/:id
+    # Recommendation
+    POST {{base}}/integrations/recommend
+    Content-Type: application/json
+
+    { "mood": "Chill", "poi_ids": [] }
+
+    # Create itinerary
+    POST {{base}}/itineraries
+    Content-Type: application/json
+
+    {
+      "mood": "Adventure",
+      "start_location": {"lat":19.0760,"lng":72.8777},
+      "time_window": {"start":"09:30","end":"19:00"}
+    }
+- File: EVALUATION.md
+  Keep Swagger: http://localhost:4000/docs
+  Update any curl examples to /api/... routes per above.
+- Fix trivial typos in README/scripts (e.g., “npm run gen”, etc.).
+
+1.4 INVALID DOM NESTING (ANCHOR‑IN‑ANCHOR) — SCAN & FIX
+- Problem pattern: <Link><Button/></Link> or any anchor nested inside another anchor.
+- Fix pattern (example):
+    // BAD
+    <Link to="/explore"><Button>Explore</Button></Link>
+    // GOOD
+    <Button asChild><Link to="/explore">Explore</Link></Button>
+- ACTION:
+  Search and fix in:
+    frontend/src/components/**/*.tsx
+    frontend/src/pages/**/*.tsx
+    frontend/src/modules/**/*.tsx
+  For components that render <a> internally (pagination, cards), ensure they are NOT placed under another <Link>. Convert inner anchors to span/div or use UI‑kit “asChild”.
+
+============================================================
+2) PROCESS & PORT CONFLICT HARDENING
+============================================================
+
+2.1 CREATE scripts/check-ports.sh (bash; macOS/Linux)
+- Behavior: exit non‑zero if any of 4000, 5173, 8001 is occupied. Print PID and friendly kill command.
+- Use: lsof -i :PORT | awk to extract PID; print instructions.
+
+2.2 CREATE scripts/dev-start.sh
+- Steps (in order):
+  a) ./scripts/check-ports.sh  → fail with message if busy.
+  b) Start AI service (8001). If repo lacks a real AI service, start a tiny local stub server that returns deterministic JSON for recommend endpoints.
+  c) Start backend in dev mode; wait until curl -fsS http://localhost:4000/docs returns 200.
+  d) Start frontend dev; wait until curl -fsS http://localhost:5173/ returns 200 and HTML contains a known <title> string.
+  e) Echo service URLs and stop instructions.
+- Manage processes consistently (either use concurrently in package.json or background PIDs saved to .pids file).
+
+2.3 CREATE scripts/dev-stop.sh
+- Read .pids and terminate them gracefully. If missing, print instructions to locate processes by port with lsof.
+
+2.4 PACKAGE SCRIPTS
+- In the top‑level package.json (or tooling package.json if present) add:
+    "dev:start": "bash ./scripts/dev-start.sh",
+    "dev:stop": "bash ./scripts/dev-stop.sh"
+
+============================================================
+3) TEST STRATEGY — COMPLETE, NO GAPS
+============================================================
+
+3.1 BACKEND — UNIT TESTS (Jest)
+- Scope:
+  • Services and controllers for: search (/api/search), POI detail (/api/pois/:id), itineraries (POST /api/itineraries), integrations/recommend (POST /api/integrations/recommend), feedback (POST /api/feedback) if present.
+  • Validate happy paths, validation errors (400), not found (404), and permission errors if any.
+- Mocks:
+  • Mock repositories/providers for pure unit tests; keep logic deterministic.
+- Coverage goal (backend unit): statements/branches/functions/lines ≥ 80%.
+
+3.2 BACKEND — INTEGRATION TESTS (Supertest)
+- Spin up the Nest app in test mode with a separate test database or in‑memory substitutes (no Docker).
+- Tests to include:
+  • OPTIONS preflight to /api/search returns 200/204 with Access-Control-Allow-Credentials: true and allowed origin http://localhost:5173.
+  • GET /api/search?q=museum → 200 and JSON array (define minimal seed or stub).
+  • GET /api/pois/:id → 200 with expected shape; 404 for unknown id.
+  • POST /api/itineraries with valid body → 201; with invalid body → 400.
+  • POST /api/integrations/recommend → 200 deterministic payload (use AI stub service in test).
+  • POST /api/feedback → 201 (or project’s intended status), validates schema.
+- Ensure tests fail on any 4xx/5xx when not expected.
+
+3.3 FRONTEND — UNIT/COMPONENT TESTS
+- Render critical components with a mocked API client pointing at the stub or MSW (Mock Service Worker).
+- Must cover:
+  • Search bar → triggers a fetch and renders at least one result item.
+  • POI card/list UI → renders required fields and navigates to details.
+  • Recommendation form → submits and renders recommended items.
+  • Itinerary creator → validates inputs, shows server error states.
+- Accessibility smoke with @testing-library/jest-dom + axe (run axe on key pages/components; ensure no violations of serious/critical level).
+
+3.4 E2E — PLAYWRIGHT (REAL FLOWS, MULTI‑BROWSER)
+- Browsers: chromium, firefox, webkit (headless by default; headed allowed).
+- Recording: video, screenshot on failure, network HAR for /api/**.
+- Test flows (examples — add selectors/data-testid as needed):
+  1) Landing → Explore navigation is clickable (no console errors, no anchor‑nesting warnings).
+  2) Explore search: type “museum” → see at least 1 search result item (data-testid="search-result-item").
+  3) POI details: click first result → details view renders name, description, map section (if feature-gated).
+  4) Recommend: submit mood “Chill” → recommended list appears (deterministic via AI stub); assert network call to /api/integrations/recommend has 200 and expected JSON shape.
+  5) Itinerary create: open form, fill minimal valid data, submit → success toast/redirect; assert POST /api/itineraries 201 with expected body; then GET a retrieval route if exists.
+  6) Negative cases: search with invalid query (e.g., extremely long string) → UI shows graceful error; itinerary with invalid window → shows validation errors (no crash).
+- Artifacts location:
+  artifacts/e2e/playwright-report/index.html
+  artifacts/e2e/screenshots/
+  artifacts/e2e/videos/
+  artifacts/e2e/hars/
+
+3.5 API PROBES (CLI, TO CATCH REGRESSION OUTSIDE UI)
+- Create scripts/api-probes.sh:
+  • curl -f -s "http://localhost:4000/api/search?q=museum" -o artifacts/e2e/search.json
+  • curl -f -s "http://localhost:4000/api/feedback" -H "Content-Type: application/json" -d '{"message":"ok"}' -X POST -o artifacts/e2e/feedback.json
+- Any non‑2xx must fail the script. Add pretty‑print step using jq if available.
+
+3.6 NON‑FUNCTIONAL TESTS (LOCAL ONLY)
+- Performance (backend):
+  • Use autocannon or oha locally against /api/search and /api/itineraries with small payloads, 30s runs, 10/50 concurrent, capture stats to artifacts/perf/*.json.
+  • Acceptable SLO example (edit to your target hardware): p95 < 200ms for /api/search at 10 concurrent.
+- Security hygiene:
+  • Run static code checks: eslint + prettier (consistent rules), types ok (tsc --noEmit for TS projects).
+  • Run semgrep (if available) with a standard ruleset; output to artifacts/security/semgrep.sarif
+  • Optional (only if installed): gitleaks scan for secrets; output to artifacts/security/gitleaks.json
+- Accessibility:
+  • Playwright + axe run on Landing, Explore, Details: no serious/critical violations. Output to artifacts/a11y/*.json
+- Cross‑browser and viewport sweeps:
+  • Execute E2E on chromium, firefox, webkit; also test 360x640, 768x1024, 1440x900 viewports (Playwright test projects).
+
+3.7 COVERAGE & QUALITY GATES
+- backend unit/integration combined: ≥ 80%
+- frontend unit: ≥ 70%
+- If thresholds are not met, flag in summary but do not block dev run; provide list of weakest files to improve next.
+
+============================================================
+4) IMPLEMENTATION CHECKLIST (ACTIONS FOR THIS PROMPT)
+============================================================
+- Detect and lock package manager; install deps once at repo root and inside frontend/backend if they are standalone workspaces.
+- Apply edits from Sections 1.1–1.4.
+- Create scripts per Section 2; add package.json entries.
+- Add/extend backend Jest config and tests (Sections 3.1–3.2). If a test DB is required, create a local test database and load minimal seed.
+- Add/extend frontend tests (Section 3.3) with testing-library and axe.
+- Configure Playwright per Section 3.4 with multi‑browser projects; ensure artifacts path is artifacts/e2e/.
+- Create api-probes.sh (Section 3.5).
+- Add performance/security/a11y tasks per Section 3.6, guarded so they only run if the tools are installed (don’t fail if missing; print hint).
+- Ensure all scripts exit non‑zero on failures (curl -f, set -euo pipefail in bash).
+- Produce final artifacts and a SUCCESS summary.
+
+============================================================
+5) RUNTIME COMMANDS (FOR HUMAN USE AFTER THIS PROMPT)
+============================================================
+# Install (auto‑detect package manager: pnpm|npm|yarn)
+<PM> install
+# Start services with port checks and waits
+<PM> run dev:start
+# Stop services
+<PM> run dev:stop
+
+# Run tests
+# 1) Backend unit+integration
+<PM> run test:backend
+# 2) Frontend unit
+<PM> run test:frontend
+# 3) E2E (all browsers)
+<PM> run test:e2e
+# 4) API probes
+bash ./scripts/api-probes.sh
+# 5) Optional non‑functional
+<PM> run test:perf
+<PM> run test:a11y
+<PM> run test:security
+
+Artifacts:
+- E2E: artifacts/e2e/playwright-report/index.html, artifacts/e2e/screenshots, artifacts/e2e/videos, artifacts/e2e/hars
+- API: artifacts/e2e/search.json, artifacts/e2e/feedback.json
+- Perf: artifacts/perf/*.json
+- A11y: artifacts/a11y/*.json
+- Security: artifacts/security/*
+
+============================================================
+6) ACCEPTANCE CRITERIA (MUST HOLD TRUE)
+============================================================
+- Frontend calls http://localhost:4000/api/** and succeeds (no CORS or 404 caused by missing /api).
+- No invalid DOM nesting; no hydration warnings on first meaningful loads.
+- Starting/stopping via dev scripts never leaves orphaned processes; port conflicts are detected early with clear messages.
+- E2E tests cover real UX flows and pass across chromium/firefox/webkit; failures produce actionable artifacts.
+- CLI API probes succeed (2xx) and write JSON files.
+- Non‑functional checks either pass or print clear next‑steps; no silent failures.
+- Documentation and API.http accurately reflect the working routes and payloads.
+- Coverage meets minimums; summary printed with weakest areas.
+
+END OF PROMPT

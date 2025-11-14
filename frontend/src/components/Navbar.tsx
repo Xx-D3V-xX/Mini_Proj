@@ -43,40 +43,34 @@ export function Navbar({ user, onLogin, onLogout }: NavbarProps) {
         </Link>
 
         <nav className="hidden md:flex items-center gap-1">
-          <Link href="/">
-            <Button
-              variant={location === "/" ? "secondary" : "ghost"}
-              className="gap-2"
-              data-testid="nav-home"
-              asChild
-            >
-              <span>Home</span>
-            </Button>
-          </Link>
-          <Link href="/explore">
-            <Button
-              variant={location === "/explore" ? "secondary" : "ghost"}
-              className="gap-2"
-              data-testid="nav-explore"
-              asChild
-            >
-              <span>Explore</span>
-            </Button>
-          </Link>
+          <Button
+            variant={location === "/" ? "secondary" : "ghost"}
+            className="gap-2"
+            data-testid="nav-home"
+            asChild
+          >
+            <Link href="/">Home</Link>
+          </Button>
+          <Button
+            variant={location === "/explore" ? "secondary" : "ghost"}
+            className="gap-2"
+            data-testid="nav-explore"
+            asChild
+          >
+            <Link href="/explore">Explore</Link>
+          </Button>
           {user ? (
-            <Link href="/itinerary/generate">
-              <Button
-                variant={location === "/itinerary/generate" ? "secondary" : "ghost"}
-                className="gap-2"
-                data-testid="nav-generate"
-                asChild
-              >
-                <span>
-                  <Sparkles className="w-4 h-4" />
-                  AI Generator
-                </span>
-              </Button>
-            </Link>
+            <Button
+              variant={location === "/itinerary/generate" ? "secondary" : "ghost"}
+              className="gap-2"
+              data-testid="nav-generate"
+              asChild
+            >
+              <Link href="/itinerary/generate">
+                <Sparkles className="w-4 h-4" />
+                AI Generator
+              </Link>
+            </Button>
           ) : (
             <Button
               variant="ghost"

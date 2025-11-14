@@ -1,4 +1,10 @@
-@base=http://localhost:4000
+@base=http://localhost:4000/api
+###
+# Search/list POIs
+GET {{base}}/search?q=museum&limit=10
+###
+# POI details
+GET {{base}}/pois/:id
 ###
 # Login
 POST {{base}}/auth/login
@@ -18,11 +24,11 @@ Content-Type: application/json
 
 {
   "mood": "Chill",
-  "prefs": {"budget": "medium"}
+  "poi_ids": []
 }
 ###
-# Generate itinerary
-POST {{base}}/itineraries/generate
+# Generate/create itinerary
+POST {{base}}/itineraries
 Content-Type: application/json
 
 {

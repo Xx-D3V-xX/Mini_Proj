@@ -86,12 +86,12 @@ export default function Landing({ isAuthenticated, onLogin }: LandingProps) {
           </p>
           <div className="flex flex-wrap items-center justify-center gap-4">
             {isAuthenticated ? (
-              <Link href="/explore">
-                <Button size="lg" className="text-lg px-8 py-6 bg-primary/90 backdrop-blur-md hover:bg-primary border border-primary-border" data-testid="button-hero-explore">
+              <Button size="lg" className="text-lg px-8 py-6 bg-primary/90 backdrop-blur-md hover:bg-primary border border-primary-border" data-testid="button-hero-explore" asChild>
+                <Link href="/explore">
                   <Compass className="w-5 h-5 mr-2" />
                   Go to Explore
-                </Button>
-              </Link>
+                </Link>
+              </Button>
             ) : (
               <>
                 <Button 
@@ -102,16 +102,15 @@ export default function Landing({ isAuthenticated, onLogin }: LandingProps) {
                 >
                   Get Started Free
                 </Button>
-                <Link href="/explore">
-                  <Button 
-                    size="lg" 
-                    variant="outline" 
-                    className="text-lg px-8 py-6 bg-background/20 backdrop-blur-md border-white/30 text-white hover:bg-background/30"
-                    data-testid="button-hero-explore-guest"
-                  >
-                    Explore as Guest
-                  </Button>
-                </Link>
+                <Button 
+                  size="lg" 
+                  variant="outline" 
+                  className="text-lg px-8 py-6 bg-background/20 backdrop-blur-md border-white/30 text-white hover:bg-background/30"
+                  data-testid="button-hero-explore-guest"
+                  asChild
+                >
+                  <Link href="/explore">Explore as Guest</Link>
+                </Button>
               </>
             )}
           </div>
@@ -191,11 +190,9 @@ export default function Landing({ isAuthenticated, onLogin }: LandingProps) {
             ))}
           </div>
           <div className="text-center">
-            <Link href="/explore">
-              <Button size="lg" variant="outline" data-testid="button-view-all-trails">
-                View All Trails
-              </Button>
-            </Link>
+            <Button size="lg" variant="outline" data-testid="button-view-all-trails" asChild>
+              <Link href="/explore">View All Trails</Link>
+            </Button>
           </div>
         </div>
       </section>
